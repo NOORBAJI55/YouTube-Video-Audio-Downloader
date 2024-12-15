@@ -239,7 +239,6 @@ if st.button("Download Video"):
                             st.write(f"Conversion successful: {mp3_file_path}")
                         except subprocess.CalledProcessError as e:
                             st.error(f"Error during conversion: {e}")
-                            return
 
                     # Provide the download button
                     with open(file_path, "rb") as file:
