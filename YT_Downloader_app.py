@@ -50,7 +50,7 @@ def download_video(url, format_choice):
     'outtmpl': '%(title)s.%(ext)s',
 }
 
-        )
+        
     elif format_choice.lower() == 'mp3':
         ydl_opts.update({
             'format': 'bestaudio/best',
