@@ -201,9 +201,12 @@ def download_video(url, format_choice):
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info_dict = ydl.extract_info(url, download=True)
             filename = ydl.prepare_filename(info_dict)
-            sanitized_filename = sanitize_filename(filename)  # Sanitize the filename
+            sanitized_filename = sanitize_filename(filename)  # Sanitize the filename before renaming
             final_path = os.path.join(download_folder, sanitized_filename)
-            os.rename(filename, final_path)  # Rename the file to the sanitized version
+
+            if filename != sanitized_filename:
+                os.rename(filename, final_path)  # Rename the file to the sanitized version
+
             st.write(f"File downloaded to: {final_path}")
             return final_path  # Return the saved filename
     except Exception as e:
@@ -261,4 +264,3 @@ if st.button("Download Video"):
                     st.error(f"File not found at path: {file_path}")
     else:
         st.error("Please enter a valid YouTube URL.")
-
