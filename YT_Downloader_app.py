@@ -110,24 +110,7 @@ and click the download button. Enjoy your favorite content offline!
 """)
 
 # Input and fetch video URL
-# Initialize session state for video info
-if "video_info" not in st.session_state:
-    st.session_state.video_info = {"title": None, "description": None, "thumbnail": None}
-
-# Input and fetch video info
-video_url = st.text_input("Enter the YouTube video URL:", key="video_url_input")
-if video_url and is_valid_youtube_url(video_url):
-    if st.button("Fetch Video Info"):
-        title, description, thumbnail = get_video_info(video_url)
-        st.session_state.video_info = {"title": title, "description": description, "thumbnail": thumbnail}
-
-# Display video info
-if st.session_state.video_info["thumbnail"]:
-    st.image(st.session_state.video_info["thumbnail"], caption="Video Thumbnail", width=500)
-if st.session_state.video_info["title"]:
-    st.markdown(f"**Title:** {st.session_state.video_info['title']}")
-if st.session_state.video_info["description"]:
-    st.markdown(f"**Description:** {st.session_state.video_info['description']}")
+video_url = st.text_input("Enter the YouTube video URL:")
 
 format_choice = st.selectbox("Select the format:", ["mp4", "mp3"])
 
