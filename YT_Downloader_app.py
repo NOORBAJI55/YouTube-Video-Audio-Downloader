@@ -67,12 +67,16 @@ import streamlit as st
 
 # Define the download function
 def download_video(url, format_choice):
+    download_folder = 'downloads/'
+    if not os.path.exists(download_folder):
+        os.makedirs(download_folder)  # Create the folder if it doesn't exist
+
     if format_choice.lower() == 'mp4':
         ydl_opts = {
             'format': 'bestvideo+bestaudio/best',
             'merge_output_format': 'mp4',
             'ffmpeg_location': '/usr/bin/ffmpeg',  # Path to FFmpeg
-            'outtmpl': 'downloads/%(title)s.%(ext)s',  # Save to 'downloads' folder
+            'outtmpl': os.path.join(download_folder, '%(title)s.%(ext)s'),  # Save to 'downloads' folder
         }
     elif format_choice.lower() == 'mp3':
         ydl_opts = {
@@ -82,7 +86,7 @@ def download_video(url, format_choice):
                 'preferredcodec': 'mp3',
                 'preferredquality': '192',
             }],
-            'outtmpl': 'downloads/%(title)s.%(ext)s',  # Save to 'downloads' folder
+            'outtmpl': os.path.join(download_folder, '%(title)s.%(ext)s'),  # Save to 'downloads' folder
         }
     else:
         return "Invalid format choice. Please choose 'mp4' or 'mp3'."
@@ -115,13 +119,19 @@ if st.button("Download Video"):
                 st.success(f"Download completed successfully: {result}")
 
                 # Provide a download button for the user to download the file
-                with open(result, "rb") as file:
-                    st.download_button(
-                        label="Click to Download Video",
-                        data=file,
-                        file_name=os.path.basename(result),
-                        mime="video/mp4" if format_choice == 'mp4' else "audio/mpeg"
-                    )
+                file_path = os.path.join('downloads', os.path.basename(result))
+
+                if os.path.exists(file_path):
+                    with open(file_path, "rb") as file:
+                        st.download_button(
+                            label="Click to Download Video",
+                            data=file,
+                            file_name=os.path.basename(result),
+                            mime="video/mp4" if format_choice == 'mp4' else "audio/mpeg"
+                        )
+                else:
+                    st.error("File not found.")
     else:
         st.error("Please enter a valid YouTube URL.")
+
 
