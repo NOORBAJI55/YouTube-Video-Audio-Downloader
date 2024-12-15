@@ -90,15 +90,6 @@ def download_video(url, format_choice):
             }],
             'outtmpl': os.path.join(download_folder, '%(title)s.%(ext)s'),  # Save to 'downloads' folder
         }
-        # ydl_opts = {
-        #     'format': 'bestaudio/best',  # Download only the best audio stream
-        #     'postprocessors': [{
-        #         'key': 'FFmpegExtractAudio',
-        #         'preferredcodec': 'mp3',
-        #         'preferredquality': '192',
-        #     }],
-        #     'outtmpl': os.path.join(download_folder, '%(title)s.%(ext)s'),  # Save to 'downloads' folder
-        # }
     else:
         return "Invalid format choice. Please choose 'mp4' or 'mp3'."
 
@@ -137,8 +128,9 @@ if st.button("Download Video"):
 
                 # Check if the file exists and handle .webm to mp3 conversion if needed
                 if os.path.exists(file_path):
-                    # Check file extension
+                    # If the file is in webm format and the user selected mp3
                     if file_path.endswith(".webm") and format_choice == "mp3":
+                        # Create the mp3 file path
                         mp3_file_path = file_path.replace(".webm", ".mp3")
                         # Convert .webm to .mp3
                         os.system(f"/usr/bin/ffmpeg -i {file_path} {mp3_file_path}")
