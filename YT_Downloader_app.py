@@ -158,11 +158,16 @@
 #     else:
 #         st.error("Please enter a valid YouTube URL.")
 
-
 import os
 import yt_dlp
 import streamlit as st
 import subprocess
+import re
+
+# Function to sanitize filenames
+def sanitize_filename(filename):
+    # Replace invalid characters with underscores
+    return re.sub(r'[<>:"/\\|?*]', '_', filename)
 
 # Define the download function
 def download_video(url, format_choice):
@@ -208,23 +213,15 @@ def download_video(url, format_choice):
                 return f"An error occurred: File not found at {actual_file_path}"
     except Exception as e:
         return f"An error occurred: {e}"
+
+
 # Streamlit UI
 st.set_page_config(page_title="YouTube Video & Audio Downloader", layout="centered")
-st.image("https://upload.wikimedia.org/wikipedia/commons/4/42/YouTube_icon_%282013-2017%29.png", width=100)
 st.title("YouTube Video Downloader")
-
-st.markdown("""
-This application allows you to download videos from YouTube in various formats. 
-Simply enter the URL of the video you want to download, select the desired format, 
-and click the download button. Enjoy your favorite content offline!
-""")
 
 # Input and fetch video URL
 video_url = st.text_input("Enter the YouTube video URL:")
-
 format_choice = st.selectbox("Select the format:", ["mp4", "mp3"])
-
-
 
 # Button for downloading and providing the download link
 if st.button("Download Video"):
@@ -238,7 +235,7 @@ if st.button("Download Video"):
                 st.write(f"Download completed successfully: {result}")
 
                 # Provide a download button for the user to download the file
-                file_path = os.path.join('downloads', os.path.basename(result))
+                file_path = result  # Use the sanitized file path
 
                 # Check if the file exists and handle .webm to mp3 conversion if needed
                 if os.path.exists(file_path):
@@ -248,11 +245,14 @@ if st.button("Download Video"):
                         mp3_file_path = file_path.replace(".webm", ".mp3")
                         # Convert .webm to .mp3
                         try:
+                            st.write(f"Converting {file_path} to {mp3_file_path}...")
                             subprocess.run(["/usr/bin/ffmpeg", "-i", file_path, mp3_file_path], check=True)
                             os.remove(file_path)  # Remove the original .webm file
                             file_path = mp3_file_path  # Update the path to the new .mp3 file
+                            st.write(f"Conversion successful: {mp3_file_path}")
                         except subprocess.CalledProcessError as e:
                             st.error(f"Error during conversion: {e}")
+                            st.write(f"Original file is still available: {file_path}")
 
                     # Provide the download button
                     with open(file_path, "rb") as file:
@@ -267,3 +267,4 @@ if st.button("Download Video"):
                     st.error(f"File not found at path: {file_path}")
     else:
         st.error("Please enter a valid YouTube URL.")
+
