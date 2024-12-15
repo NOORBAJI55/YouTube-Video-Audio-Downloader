@@ -230,15 +230,24 @@ if st.button("Download Video"):
                     if file_path.endswith(".webm") and format_choice == "mp3":
                         # Create the mp3 file path
                         mp3_file_path = file_path.replace(".webm", ".mp3")
-                        # Convert .webm to .mp3
+                        # Convert .webm to .mp3 with a timeout
                         try:
                             st.write(f"Converting {file_path} to {mp3_file_path}...")
-                            subprocess.run(["/usr/bin/ffmpeg", "-i", file_path, mp3_file_path], check=True)
+                            # Run FFmpeg with a timeout of 60 seconds
+                            result = subprocess.run(
+                                ["/usr/bin/ffmpeg", "-i", file_path, mp3_file_path],
+                                check=True, timeout=120,  # Set timeout to 2 minutes
+                                stdout=subprocess.PIPE, stderr=subprocess.PIPE
+                            )
                             os.remove(file_path)  # Remove the original .webm file
                             file_path = mp3_file_path  # Update the path to the new .mp3 file
                             st.write(f"Conversion successful: {mp3_file_path}")
                         except subprocess.CalledProcessError as e:
-                            st.error(f"Error during conversion: {e}")
+                            st.error(f"Error during conversion: {e.stderr.decode()}")
+                        except subprocess.TimeoutExpired:
+                            st.error("Conversion timed out. Please try again.")
+                        except Exception as e:
+                            st.error(f"An unexpected error occurred: {e}")
 
                     # Provide the download button
                     with open(file_path, "rb") as file:
