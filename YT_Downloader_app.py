@@ -81,7 +81,6 @@ def download_video(url, format_choice):
             'outtmpl': os.path.join(download_folder, '%(title)s.%(ext)s'),  # Save to 'downloads' folder
         }
     elif format_choice.lower() == 'mp3':
-        elif format_choice.lower() == 'mp3':
         ydl_opts = {
             'format': 'bestaudio/best',
             'postprocessors': [{
