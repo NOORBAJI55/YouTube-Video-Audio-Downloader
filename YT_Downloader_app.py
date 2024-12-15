@@ -158,6 +158,13 @@
 #     else:
 #         st.error("Please enter a valid YouTube URL.")
 
+
+import os
+import yt_dlp
+import streamlit as st
+import subprocess
+
+# Define the download function
 def download_video(url, format_choice):
     download_folder = '/mount/src/youtube-video-audio-downloader/downloads/'  # Absolute path
     if not os.path.exists(download_folder):
