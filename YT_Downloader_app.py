@@ -247,6 +247,7 @@ if st.button("Download Video"):
                             subprocess.run(["/usr/bin/ffmpeg", "-i", file_path, mp3_file_path], check=True)
                             os.remove(file_path)  # Remove the original .webm file
                             file_path = mp3_file_path  # Update the path to the new .mp3 file
+                            st.write(f"Conversion successful: {mp3_file_path}")
                         except subprocess.CalledProcessError as e:
                             st.error(f"Error during conversion: {e}")
                             st.write(f"Original file is still available: {file_path}")
