@@ -28,24 +28,31 @@ def get_video_info(url):
 
 # Download video
 def download_video(url, format_choice):
+    # Configure options for yt-dlp
+    ydl_opts = {
+        'outtmpl': '%(title)s.%(ext)s',  # Output file name format
+        'ffmpeg_location': '/usr/bin/ffmpeg',  # Path to FFmpeg, adjust if needed
+    }
+
+    # Set format based on user choice
     if format_choice.lower() == 'mp4':
-        ydl_opts = {
+        ydl_opts.update({
             'format': 'bestvideo+bestaudio/best',
-            'outtmpl': '%(title)s.mp4',
-        }
+            'merge_output_format': 'mp4',
+        })
     elif format_choice.lower() == 'mp3':
-        ydl_opts = {
+        ydl_opts.update({
             'format': 'bestaudio/best',
             'postprocessors': [{
                 'key': 'FFmpegExtractAudio',
                 'preferredcodec': 'mp3',
                 'preferredquality': '192',
             }],
-            'outtmpl': '%(title)s.%(ext)s',
-        }
+        })
     else:
         return "Invalid format choice. Please choose 'mp4' or 'mp3'."
 
+    # Download the video/audio
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             ydl.download([url])
@@ -54,6 +61,7 @@ def download_video(url, format_choice):
             return f"Download completed successfully: {title}"
     except Exception as e:
         return f"An error occurred: {e}"
+
 
 # Streamlit UI
 st.set_page_config(page_title="YouTube Video & Audio Downloader", layout="centered")
