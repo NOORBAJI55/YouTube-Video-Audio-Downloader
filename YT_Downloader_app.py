@@ -43,14 +43,14 @@ def download_video(url, format_choice):
 
     # Set format based on user choice
     if format_choice.lower() == 'mp4':
-        ydl_opts = {
+            ydl_opts = {
     'format': 'bestvideo+bestaudio/best',
     'merge_output_format': 'mp4',
     'ffmpeg_location': '/usr/bin/ffmpeg',  # Path to FFmpeg
     'outtmpl': '%(title)s.%(ext)s',
 }
 
-        })
+        )
     elif format_choice.lower() == 'mp3':
         ydl_opts.update({
             'format': 'bestaudio/best',
