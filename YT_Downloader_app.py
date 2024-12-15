@@ -181,8 +181,13 @@ def download_video(url, format_choice):
         }
     elif format_choice.lower() == 'mp3':
         ydl_opts = {
-            'format': 'bestaudio/best',
+            'format': 'bestaudio/best',  # Download the best audio
             'outtmpl': os.path.join(download_folder, '%(title)s.%(ext)s'),  # Save to 'downloads' folder
+            'postprocessors': [{
+                'key': 'FFmpegExtractAudio',
+                'preferredcodec': 'mp3',
+                'preferredquality': '192',  # You can lower this value for faster conversion
+            }],
         }
     else:
         return "Invalid format choice. Please choose 'mp4' or 'mp3'."
@@ -228,7 +233,7 @@ if st.button("Download Video"):
                         # Convert .webm to .mp3
                         try:
                             subprocess.run(["/usr/bin/ffmpeg", "-i", file_path, mp3_file_path], check=True)
-                            os.remove(file_path)  # Remove the original .webm file
+                            os.remove(file_path) # Remove the original .webm file
                             file_path = mp3_file_path  # Update the path to the new .mp3 file
                         except subprocess.CalledProcessError as e:
                             st.error(f"Error during conversion: {e}")
