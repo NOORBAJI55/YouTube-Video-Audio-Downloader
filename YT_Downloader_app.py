@@ -204,9 +204,8 @@ def download_video(url, format_choice):
             sanitized_filename = sanitize_filename(os.path.basename(filename))  # Sanitize the filename
             final_path = os.path.join(download_folder, sanitized_filename)
 
-            # Rename the file only if the original filename is different
-            if filename != final_path:
-                os.rename(filename, final_path)  # Rename the file to the sanitized version
+            # Move the file to the sanitized path after download
+            os.rename(filename, final_path)
 
             st.write(f"File downloaded to: {final_path}")
             return final_path  # Return the saved filename
