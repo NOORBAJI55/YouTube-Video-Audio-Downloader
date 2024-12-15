@@ -181,7 +181,7 @@ def download_video(url, format_choice):
             'format': 'bestvideo+bestaudio/best',  # Download both video and audio
             'merge_output_format': 'mp4',  # Merge into mp4 format
             'ffmpeg_location': '/usr/bin/ffmpeg',  # Path to FFmpeg
-            'outtmpl': os.path.join(download_folder, '%(title)s.%(ext)s'),  # Save to 'downloads' folder
+            'outtmpl': os.path.abspath(os.path.join(download_folder, '%(title)s.%(ext)s')),  # Full path
         }
     elif format_choice.lower() == 'mp3':
         ydl_opts = {
@@ -191,7 +191,7 @@ def download_video(url, format_choice):
                 'preferredcodec': 'mp3',
                 'preferredquality': '192',
             }],
-            'outtmpl': os.path.join(download_folder, '%(title)s.%(ext)s'),
+            'outtmpl': os.path.abspath(os.path.join(download_folder, '%(title)s.%(ext)s')),
         }
     else:
         return "Invalid format choice. Please choose 'mp4' or 'mp3'."
@@ -206,9 +206,16 @@ def download_video(url, format_choice):
             sanitized_filename = sanitize_filename(os.path.basename(filename))  # Sanitize the filename
             final_path = os.path.join(download_folder, sanitized_filename)
 
-            # Log the sanitized filename and path
-            st.write(f"Sanitized filename: {sanitized_filename}")
-            st.write(f"Final path: {final_path}")
+            # Check if the file exists at the original and final paths
+            if os.path.exists(filename):
+                st.write(f"Original file exists at: {filename}")
+            else:
+                st.write(f"Original file does not exist at: {filename}")
+
+            if os.path.exists(final_path):
+                st.write(f"Final file path exists at: {final_path}")
+            else:
+                st.write(f"Final file path does not exist at: {final_path}")
 
             # Rename the file only if the original filename is different
             if filename != final_path:
