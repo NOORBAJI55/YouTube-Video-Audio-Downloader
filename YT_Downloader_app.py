@@ -173,6 +173,9 @@ def sanitize_filename(filename):
 # Define the download function
 def download_video(url, format_choice):
     download_folder = '/mount/src/youtube-video-audio-downloader/downloads/'  # Absolute path
+  # Define the download function
+def download_video(url, format_choice):
+    download_folder = '/mount/src/youtube-video-audio-downloader/downloads/'  # Absolute path
     if not os.path.exists(download_folder):
         os.makedirs(download_folder)  # Create the folder if it doesn't exist
 
@@ -215,9 +218,7 @@ def download_video(url, format_choice):
 
             return final_path
     except Exception as e:
-        st.error(f"An error occurred: {e}")
-
-
+        return f"An error occurred: {e}"
 
 
 # Streamlit UI
@@ -233,7 +234,8 @@ if st.button("Download Video"):
     if video_url:
         with st.spinner("Downloading..."):
             result = download_video(video_url, format_choice)
-            if result.startswith("An error occurred"):
+            # Check if result is None or an error message
+            if not result or result.startswith("An error occurred"):
                 st.error(result)
             else:
                 # Debug: Print the download location
