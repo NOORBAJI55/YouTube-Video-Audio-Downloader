@@ -75,14 +75,14 @@ def download_video(url, format_choice):
 
     if format_choice.lower() == 'mp4':
         ydl_opts = {
-            'format': 'bestvideo+bestaudio/best',
-            'merge_output_format': 'mp4',
+            'format': 'bestvideo+bestaudio/best',  # Download both video and audio
+            'merge_output_format': 'mp4',  # Merge into mp4 format
             'ffmpeg_location': '/usr/bin/ffmpeg',  # Path to FFmpeg
             'outtmpl': os.path.join(download_folder, '%(title)s.%(ext)s'),  # Save to 'downloads' folder
         }
     elif format_choice.lower() == 'mp3':
         ydl_opts = {
-            'format': 'bestaudio/best',  # Download the best audio
+            'format': 'bestaudio/best',  # Download only the best audio stream
             'postprocessors': [{
                 'key': 'FFmpegExtractAudio',
                 'preferredcodec': 'mp3',
@@ -94,7 +94,7 @@ def download_video(url, format_choice):
         return "Invalid format choice. Please choose 'mp4' or 'mp3'."
 
     try:
-        # Download video
+        # Download video or audio
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info_dict = ydl.extract_info(url, download=True)
             filename = ydl.prepare_filename(info_dict)
@@ -126,17 +126,29 @@ if st.button("Download Video"):
                 # Provide a download button for the user to download the file
                 file_path = os.path.join('downloads', os.path.basename(result))
 
-                # Check if the file exists
+                # Check if the file exists and handle .webm to mp3 conversion if needed
                 if os.path.exists(file_path):
+                    # Check file extension
+                    if file_path.endswith(".webm") and format_choice == "mp3":
+                        mp3_file_path = file_path.replace(".webm", ".mp3")
+                        # Convert .webm to .mp3
+                        os.system(f"/usr/bin/ffmpeg -i {file_path} {mp3_file_path}")
+                        os.remove(file_path)  # Remove the original .webm file
+
+                        # Update the path to the new .mp3 file
+                        file_path = mp3_file_path
+
+                    # Provide the download button
                     with open(file_path, "rb") as file:
                         mime_type = "audio/mpeg" if format_choice == 'mp3' else "video/mp4"
                         st.download_button(
                             label="Click to Download Video",
                             data=file,
-                            file_name=os.path.basename(result),
+                            file_name=os.path.basename(file_path),
                             mime=mime_type
                         )
                 else:
                     st.error(f"File not found at path: {file_path}")
     else:
         st.error("Please enter a valid YouTube URL.")
+
