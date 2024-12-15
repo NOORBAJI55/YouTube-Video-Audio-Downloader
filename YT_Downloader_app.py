@@ -1,6 +1,8 @@
 import os
+import streamlit as st
+
 ffmpeg_path = os.popen('which ffmpeg').read().strip()
-print("FFmpeg Path:", ffmpeg_path)
+st.write("FFmpeg Path:", ffmpeg_path)
 
 
 # import streamlit as st
