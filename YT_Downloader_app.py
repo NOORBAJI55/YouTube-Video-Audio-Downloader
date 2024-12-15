@@ -66,6 +66,7 @@
 import os
 import yt_dlp
 import streamlit as st
+import subprocess
 
 # Define the download function
 def download_video(url, format_choice):
@@ -83,11 +84,6 @@ def download_video(url, format_choice):
     elif format_choice.lower() == 'mp3':
         ydl_opts = {
             'format': 'bestaudio/best',
-            'postprocessors': [{
-                'key': 'FFmpegExtractAudio',
-                'preferredcodec': 'mp3',
-                'preferredquality': '192',
-            }],
             'outtmpl': os.path.join(download_folder, '%(title)s.%(ext)s'),  # Save to 'downloads' folder
         }
     else:
@@ -98,7 +94,6 @@ def download_video(url, format_choice):
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info_dict = ydl.extract_info(url, download=True)
             filename = ydl.prepare_filename(info_dict)
-            # Debug: Print the full path of the downloaded file
             st.write(f"File downloaded to: {filename}")
             return filename  # Return the saved filename
     except Exception as e:
@@ -133,11 +128,13 @@ if st.button("Download Video"):
                         # Create the mp3 file path
                         mp3_file_path = file_path.replace(".webm", ".mp3")
                         # Convert .webm to .mp3
-                        os.system(f"/usr/bin/ffmpeg -i {file_path} {mp3_file_path}")
-                        os.remove(file_path)  # Remove the original .webm file
-
-                        # Update the path to the new .mp3 file
-                        file_path = mp3_file_path
+                        try:
+                            subprocess.run(["/usr/bin/ffmpeg", "-i", file_path, mp3_file_path], check=True)
+                            os.remove(file_path)  # Remove the original .webm file
+                            file_path = mp3_file_path  # Update the path to the new .mp3 file
+                        except subprocess.CalledProcessError as e:
+                            st.error(f"Error during conversion: {e}")
+                            return
 
                     # Provide the download button
                     with open(file_path, "rb") as file:
