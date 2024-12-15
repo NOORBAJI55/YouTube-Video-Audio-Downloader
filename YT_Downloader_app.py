@@ -201,11 +201,18 @@ def download_video(url, format_choice):
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info_dict = ydl.extract_info(url, download=True)
             filename = ydl.prepare_filename(info_dict)  # Get the original filename
+            st.write(f"Original filename: {filename}")  # Debug: Print the original filename
+
             sanitized_filename = sanitize_filename(os.path.basename(filename))  # Sanitize the filename
             final_path = os.path.join(download_folder, sanitized_filename)
 
-            # Move the file to the sanitized path after download
-            os.rename(filename, final_path)
+            # Log the sanitized filename and path
+            st.write(f"Sanitized filename: {sanitized_filename}")
+            st.write(f"Final path: {final_path}")
+
+            # Rename the file only if the original filename is different
+            if filename != final_path:
+                os.rename(filename, final_path)
 
             st.write(f"File downloaded to: {final_path}")
             return final_path  # Return the saved filename
