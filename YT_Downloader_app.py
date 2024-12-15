@@ -158,7 +158,6 @@
 #     else:
 #         st.error("Please enter a valid YouTube URL.")
 
-
 import os
 import yt_dlp
 import streamlit as st
@@ -175,6 +174,9 @@ def download_video(url, format_choice):
     download_folder = '/mount/src/youtube-video-audio-downloader/downloads/'  # Absolute path
     if not os.path.exists(download_folder):
         os.makedirs(download_folder)  # Create the folder if it doesn't exist
+
+    # Print the current working directory for debugging purposes
+    st.write(f"Current working directory: {os.getcwd()}")
 
     if format_choice.lower() == 'mp4':
         ydl_opts = {
@@ -207,11 +209,13 @@ def download_video(url, format_choice):
             final_path = os.path.join(download_folder, sanitized_filename)
 
             # Check if the file exists at the original and final paths
+            st.write(f"Checking if original file exists at: {filename}")
             if os.path.exists(filename):
                 st.write(f"Original file exists at: {filename}")
             else:
                 st.write(f"Original file does not exist at: {filename}")
 
+            st.write(f"Checking final file path: {final_path}")
             if os.path.exists(final_path):
                 st.write(f"Final file path exists at: {final_path}")
             else:
@@ -219,6 +223,7 @@ def download_video(url, format_choice):
 
             # Rename the file only if the original filename is different
             if filename != final_path:
+                st.write(f"Renaming file from {filename} to {final_path}")
                 os.rename(filename, final_path)
 
             st.write(f"File downloaded to: {final_path}")
