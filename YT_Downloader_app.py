@@ -200,11 +200,12 @@ def download_video(url, format_choice):
         # Download video or audio
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info_dict = ydl.extract_info(url, download=True)
-            filename = ydl.prepare_filename(info_dict)
-            sanitized_filename = sanitize_filename(filename)  # Sanitize the filename before renaming
+            filename = ydl.prepare_filename(info_dict)  # Get the original filename
+            sanitized_filename = sanitize_filename(os.path.basename(filename))  # Sanitize the filename
             final_path = os.path.join(download_folder, sanitized_filename)
 
-            if filename != sanitized_filename:
+            # Rename the file only if the original filename is different
+            if filename != final_path:
                 os.rename(filename, final_path)  # Rename the file to the sanitized version
 
             st.write(f"File downloaded to: {final_path}")
@@ -246,7 +247,6 @@ if st.button("Download Video"):
                             subprocess.run(["/usr/bin/ffmpeg", "-i", file_path, mp3_file_path], check=True)
                             os.remove(file_path)  # Remove the original .webm file
                             file_path = mp3_file_path  # Update the path to the new .mp3 file
-                            st.write(f"Conversion successful: {mp3_file_path}")
                         except subprocess.CalledProcessError as e:
                             st.error(f"Error during conversion: {e}")
                             st.write(f"Original file is still available: {file_path}")
