@@ -96,6 +96,8 @@ def download_video(url, format_choice):
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info_dict = ydl.extract_info(url, download=True)
             filename = ydl.prepare_filename(info_dict)
+            # Debug: Print the full path of the downloaded file
+            st.write(f"File downloaded to: {filename}")
             return filename  # Return the saved filename
     except Exception as e:
         return f"An error occurred: {e}"
@@ -116,11 +118,13 @@ if st.button("Download Video"):
             if result.startswith("An error occurred"):
                 st.error(result)
             else:
-                st.success(f"Download completed successfully: {result}")
+                # Debug: Print the download location
+                st.write(f"Download completed successfully: {result}")
 
                 # Provide a download button for the user to download the file
                 file_path = os.path.join('downloads', os.path.basename(result))
 
+                # Check if the file exists
                 if os.path.exists(file_path):
                     with open(file_path, "rb") as file:
                         st.download_button(
@@ -130,8 +134,6 @@ if st.button("Download Video"):
                             mime="video/mp4" if format_choice == 'mp4' else "audio/mpeg"
                         )
                 else:
-                    st.error("File not found.")
+                    st.error(f"File not found at path: {file_path}")
     else:
         st.error("Please enter a valid YouTube URL.")
-
-
