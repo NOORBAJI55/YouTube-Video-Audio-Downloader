@@ -81,8 +81,9 @@ def download_video(url, format_choice):
             'outtmpl': os.path.join(download_folder, '%(title)s.%(ext)s'),  # Save to 'downloads' folder
         }
     elif format_choice.lower() == 'mp3':
+        elif format_choice.lower() == 'mp3':
         ydl_opts = {
-            'format': 'bestaudio/best',  # Download only the best audio stream
+            'format': 'bestaudio/best',
             'postprocessors': [{
                 'key': 'FFmpegExtractAudio',
                 'preferredcodec': 'mp3',
@@ -90,6 +91,15 @@ def download_video(url, format_choice):
             }],
             'outtmpl': os.path.join(download_folder, '%(title)s.%(ext)s'),  # Save to 'downloads' folder
         }
+        # ydl_opts = {
+        #     'format': 'bestaudio/best',  # Download only the best audio stream
+        #     'postprocessors': [{
+        #         'key': 'FFmpegExtractAudio',
+        #         'preferredcodec': 'mp3',
+        #         'preferredquality': '192',
+        #     }],
+        #     'outtmpl': os.path.join(download_folder, '%(title)s.%(ext)s'),  # Save to 'downloads' folder
+        # }
     else:
         return "Invalid format choice. Please choose 'mp4' or 'mp3'."
 
