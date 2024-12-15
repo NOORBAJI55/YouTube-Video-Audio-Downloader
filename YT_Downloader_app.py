@@ -160,11 +160,16 @@
 
 
 
-
 import os
 import yt_dlp
 import streamlit as st
 import subprocess
+import re
+
+# Function to sanitize filenames
+def sanitize_filename(filename):
+    # Replace invalid characters with underscores
+    return re.sub(r'[<>:"/\\|?*]', '_', filename)
 
 # Define the download function
 def download_video(url, format_choice):
@@ -181,12 +186,12 @@ def download_video(url, format_choice):
         }
     elif format_choice.lower() == 'mp3':
         ydl_opts = {
-            'format': 'bestaudio/best',  # Download the best audio
+            'format': 'bestaudio/best',
             'outtmpl': os.path.join(download_folder, '%(title)s.%(ext)s'),  # Save to 'downloads' folder
             'postprocessors': [{
                 'key': 'FFmpegExtractAudio',
                 'preferredcodec': 'mp3',
-                'preferredquality': '192',  # You can lower this value for faster conversion
+                'preferredquality': '192',
             }],
         }
     else:
@@ -197,8 +202,11 @@ def download_video(url, format_choice):
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info_dict = ydl.extract_info(url, download=True)
             filename = ydl.prepare_filename(info_dict)
-            st.write(f"File downloaded to: {filename}")
-            return filename  # Return the saved filename
+            sanitized_filename = sanitize_filename(filename)  # Sanitize the filename
+            final_path = os.path.join(download_folder, sanitized_filename)
+            os.rename(filename, final_path)  # Rename the file to the sanitized version
+            st.write(f"File downloaded to: {final_path}")
+            return final_path  # Return the saved filename
     except Exception as e:
         return f"An error occurred: {e}"
 
@@ -222,7 +230,7 @@ if st.button("Download Video"):
                 st.write(f"Download completed successfully: {result}")
 
                 # Provide a download button for the user to download the file
-                file_path = os.path.join('downloads', os.path.basename(result))
+                file_path = result  # Use the sanitized file path
 
                 # Check if the file exists and handle .webm to mp3 conversion if needed
                 if os.path.exists(file_path):
@@ -233,14 +241,14 @@ if st.button("Download Video"):
                         # Convert .webm to .mp3
                         try:
                             subprocess.run(["/usr/bin/ffmpeg", "-i", file_path, mp3_file_path], check=True)
-                            os.remove(file_path) # Remove the original .webm file
+                            os.remove(file_path)  # Remove the original .webm file
                             file_path = mp3_file_path  # Update the path to the new .mp3 file
                         except subprocess.CalledProcessError as e:
                             st.error(f"Error during conversion: {e}")
 
                     # Provide the download button
                     with open(file_path, "rb") as file:
-                        mime_type = "audio/mpeg" if format_choice == 'mp3' else "video/mp4"
+                        mime_type = "audio/mpeg" if format_choice == 'mp3' else "video/mp mp4"
                         st.download_button(
                             label="Click to Download Video",
                             data=file,
@@ -251,4 +259,3 @@ if st.button("Download Video"):
                     st.error(f"File not found at path: {file_path}")
     else:
         st.error("Please enter a valid YouTube URL.")
-        
