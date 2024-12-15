@@ -198,21 +198,24 @@ def download_video(url, format_choice):
         return "Invalid format choice. Please choose 'mp4' or 'mp3'."
 
     try:
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            info_dict = ydl.extract_info(url, download=True)
+    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+        info_dict = ydl.extract_info(url, download=True)
+        file_path = ydl.prepare_filename(info_dict)
 
-            # Extract the actual file path from yt-dlp's info_dict
-            actual_file_path = info_dict.get('filepath', None)
-            st.write(f"yt-dlp reported file path: {actual_file_path}")
+        if not file_path or not os.path.exists(file_path):
+            raise FileNotFoundError(f"File not found at {file_path}")
 
-            if actual_file_path and os.path.exists(actual_file_path):
-                st.write(f"File downloaded successfully: {actual_file_path}")
-                return actual_file_path
-            else:
-                st.error(f"File not found at the reported path: {actual_file_path}")
-                return f"An error occurred: File not found at {actual_file_path}"
-    except Exception as e:
-        return f"An error occurred: {e}"
+        # Sanitize filename and move file if needed
+        sanitized_filename = sanitize_filename(os.path.basename(file_path))
+        final_path = os.path.join(download_folder, sanitized_filename)
+
+        if file_path != final_path:
+            os.rename(file_path, final_path)
+
+        return final_path
+except Exception as e:
+    st.error(f"An error occurred: {e}")
+
 
 
 # Streamlit UI
