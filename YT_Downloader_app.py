@@ -172,7 +172,7 @@ def sanitize_filename(filename):
 
 # Define the download function
 def download_video(url, format_choice):
-    download_folder = 'downloads/'
+    download_folder = '/mount/src/youtube-video-audio-downloader/downloads/'  # Absolute path
     if not os.path.exists(download_folder):
         os.makedirs(download_folder)  # Create the folder if it doesn't exist
 
@@ -181,7 +181,7 @@ def download_video(url, format_choice):
             'format': 'bestvideo+bestaudio/best',  # Download both video and audio
             'merge_output_format': 'mp4',  # Merge into mp4 format
             'ffmpeg_location': '/usr/bin/ffmpeg',  # Path to FFmpeg
-            'outtmpl': os.path.abspath(os.path.join(download_folder, '%(title)s.%(ext)s')),  # Full path
+            'outtmpl': os.path.join(download_folder, '%(title)s.%(ext)s'),  # Absolute path
         }
     elif format_choice.lower() == 'mp3':
         ydl_opts = {
@@ -191,7 +191,7 @@ def download_video(url, format_choice):
                 'preferredcodec': 'mp3',
                 'preferredquality': '192',
             }],
-            'outtmpl': os.path.abspath(os.path.join(download_folder, '%(title)s.%(ext)s')),
+            'outtmpl': os.path.join(download_folder, '%(title)s.%(ext)s'),
         }
     else:
         return "Invalid format choice. Please choose 'mp4' or 'mp3'."
