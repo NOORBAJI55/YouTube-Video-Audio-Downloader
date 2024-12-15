@@ -158,32 +158,19 @@
 #     else:
 #         st.error("Please enter a valid YouTube URL.")
 
-import os
-import yt_dlp
-import streamlit as st
-import subprocess
-import re
-
-# Function to sanitize filenames
-def sanitize_filename(filename):
-    # Replace invalid characters with underscores
-    return re.sub(r'[<>:"/\\|?*]', '_', filename)
-
-# Define the download function
 def download_video(url, format_choice):
     download_folder = '/mount/src/youtube-video-audio-downloader/downloads/'  # Absolute path
     if not os.path.exists(download_folder):
         os.makedirs(download_folder)  # Create the folder if it doesn't exist
 
-    # Print the current working directory for debugging purposes
     st.write(f"Current working directory: {os.getcwd()}")
 
     if format_choice.lower() == 'mp4':
         ydl_opts = {
-            'format': 'bestvideo+bestaudio/best',  # Download both video and audio
-            'merge_output_format': 'mp4',  # Merge into mp4 format
-            'ffmpeg_location': '/usr/bin/ffmpeg',  # Path to FFmpeg
-            'outtmpl': os.path.join(download_folder, '%(title)s.%(ext)s'),  # Absolute path
+            'format': 'bestvideo+bestaudio/best',  
+            'merge_output_format': 'mp4',  
+            'ffmpeg_location': '/usr/bin/ffmpeg',
+            'outtmpl': os.path.join(download_folder, '%(title)s.%(ext)s'),
         }
     elif format_choice.lower() == 'mp3':
         ydl_opts = {
@@ -199,87 +186,18 @@ def download_video(url, format_choice):
         return "Invalid format choice. Please choose 'mp4' or 'mp3'."
 
     try:
-        # Download video or audio
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info_dict = ydl.extract_info(url, download=True)
-            filename = ydl.prepare_filename(info_dict)  # Get the original filename
-            st.write(f"Original filename: {filename}")  # Debug: Print the original filename
 
-            sanitized_filename = sanitize_filename(os.path.basename(filename))  # Sanitize the filename
-            final_path = os.path.join(download_folder, sanitized_filename)
+            # Extract the actual file path from yt-dlp's info_dict
+            actual_file_path = info_dict.get('filepath', None)
+            st.write(f"yt-dlp reported file path: {actual_file_path}")
 
-            # Check if the file exists at the original and final paths
-            st.write(f"Checking if original file exists at: {filename}")
-            if os.path.exists(filename):
-                st.write(f"Original file exists at: {filename}")
+            if actual_file_path and os.path.exists(actual_file_path):
+                st.write(f"File downloaded successfully: {actual_file_path}")
+                return actual_file_path
             else:
-                st.write(f"Original file does not exist at: {filename}")
-
-            st.write(f"Checking final file path: {final_path}")
-            if os.path.exists(final_path):
-                st.write(f"Final file path exists at: {final_path}")
-            else:
-                st.write(f"Final file path does not exist at: {final_path}")
-
-            # Rename the file only if the original filename is different
-            if filename != final_path:
-                st.write(f"Renaming file from {filename} to {final_path}")
-                os.rename(filename, final_path)
-
-            st.write(f"File downloaded to: {final_path}")
-            return final_path  # Return the saved filename
+                st.error(f"File not found at the reported path: {actual_file_path}")
+                return f"An error occurred: File not found at {actual_file_path}"
     except Exception as e:
         return f"An error occurred: {e}"
-
-# Streamlit UI
-st.set_page_config(page_title="YouTube Video & Audio Downloader", layout="centered")
-st.title("YouTube Video Downloader")
-
-# Input and fetch video URL
-video_url = st.text_input("Enter the YouTube video URL:")
-format_choice = st.selectbox("Select the format:", ["mp4", "mp3"])
-
-# Button for downloading and providing the download link
-if st.button("Download Video"):
-    if video_url:
-        with st.spinner("Downloading..."):
-            result = download_video(video_url, format_choice)
-            if result.startswith("An error occurred"):
-                st.error(result)
-            else:
-                # Debug: Print the download location
-                st.write(f"Download completed successfully: {result}")
-
-                # Provide a download button for the user to download the file
-                file_path = result  # Use the sanitized file path
-
-                # Check if the file exists and handle .webm to mp3 conversion if needed
-                if os.path.exists(file_path):
-                    # If the file is in webm format and the user selected mp3
-                    if file_path.endswith(".webm") and format_choice == "mp3":
-                        # Create the mp3 file path
-                        mp3_file_path = file_path.replace(".webm", ".mp3")
-                        # Convert .webm to .mp3
-                        try:
-                            st.write(f"Converting {file_path} to {mp3_file_path}...")
-                            subprocess.run(["/usr/bin/ffmpeg", "-i", file_path, mp3_file_path], check=True)
-                            os.remove(file_path)  # Remove the original .webm file
-                            file_path = mp3_file_path  # Update the path to the new .mp3 file
-                            st.write(f"Conversion successful: {mp3_file_path}")
-                        except subprocess.CalledProcessError as e:
-                            st.error(f"Error during conversion: {e}")
-                            st.write(f"Original file is still available: {file_path}")
-
-                    # Provide the download button
-                    with open(file_path, "rb") as file:
-                        mime_type = "audio/mpeg" if format_choice == 'mp3' else "video/mp4"
-                        st.download_button(
-                            label="Click to Download Video",
-                            data=file,
-                            file_name=os.path.basename(file_path),
-                            mime=mime_type
-                        )
-                else:
-                    st.error(f"File not found at path: {file_path}")
-    else:
-        st.error("Please enter a valid YouTube URL.")
