@@ -61,6 +61,8 @@
 #     else:
 #         st.error("Please enter a valid YouTube URL.")
 
+
+
 import os
 import yt_dlp
 import streamlit as st
@@ -80,7 +82,7 @@ def download_video(url, format_choice):
         }
     elif format_choice.lower() == 'mp3':
         ydl_opts = {
-            'format': 'bestaudio/best',
+            'format': 'bestaudio/best',  # Download the best audio
             'postprocessors': [{
                 'key': 'FFmpegExtractAudio',
                 'preferredcodec': 'mp3',
@@ -127,11 +129,12 @@ if st.button("Download Video"):
                 # Check if the file exists
                 if os.path.exists(file_path):
                     with open(file_path, "rb") as file:
+                        mime_type = "audio/mpeg" if format_choice == 'mp3' else "video/mp4"
                         st.download_button(
                             label="Click to Download Video",
                             data=file,
                             file_name=os.path.basename(result),
-                            mime="video/mp4" if format_choice == 'mp4' else "audio/mpeg"
+                            mime=mime_type
                         )
                 else:
                     st.error(f"File not found at path: {file_path}")
