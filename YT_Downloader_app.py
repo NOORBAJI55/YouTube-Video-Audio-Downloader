@@ -170,6 +170,7 @@ def sanitize_filename(filename):
     return re.sub(r'[<>:"/\\|?*]', '_', filename)
 
 # Define the download function
+# Define the download function
 def download_video(url, format_choice):
     download_folder = '/mount/src/youtube-video-audio-downloader/downloads/'  # Absolute path
     if not os.path.exists(download_folder):
@@ -198,23 +199,24 @@ def download_video(url, format_choice):
         return "Invalid format choice. Please choose 'mp4' or 'mp3'."
 
     try:
-    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-        info_dict = ydl.extract_info(url, download=True)
-        file_path = ydl.prepare_filename(info_dict)
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            info_dict = ydl.extract_info(url, download=True)
+            file_path = ydl.prepare_filename(info_dict)
 
-        if not file_path or not os.path.exists(file_path):
-            raise FileNotFoundError(f"File not found at {file_path}")
+            if not file_path or not os.path.exists(file_path):
+                raise FileNotFoundError(f"File not found at {file_path}")
 
-        # Sanitize filename and move file if needed
-        sanitized_filename = sanitize_filename(os.path.basename(file_path))
-        final_path = os.path.join(download_folder, sanitized_filename)
+            # Sanitize filename and move file if needed
+            sanitized_filename = sanitize_filename(os.path.basename(file_path))
+            final_path = os.path.join(download_folder, sanitized_filename)
 
-        if file_path != final_path:
-            os.rename(file_path, final_path)
+            if file_path != final_path:
+                os.rename(file_path, final_path)
 
-        return final_path
-except Exception as e:
-    st.error(f"An error occurred: {e}")
+            return final_path
+    except Exception as e:
+        st.error(f"An error occurred: {e}")
+
 
 
 
