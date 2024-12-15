@@ -100,11 +100,38 @@ def download_video(url, format_choice):
 
 # Streamlit UI
 st.set_page_config(page_title="YouTube Video & Audio Downloader", layout="centered")
+st.image("https://upload.wikimedia.org/wikipedia/commons/4/42/YouTube_icon_%282013-2017%29.png", width=100)
 st.title("YouTube Video Downloader")
+
+st.markdown("""
+This application allows you to download videos from YouTube in various formats. 
+Simply enter the URL of the video you want to download, select the desired format, 
+and click the download button. Enjoy your favorite content offline!
+""")
 
 # Input and fetch video URL
 video_url = st.text_input("Enter the YouTube video URL:")
 format_choice = st.selectbox("Select the format:", ["mp4", "mp3"])
+
+# Initialize session state for video info
+if "video_info" not in st.session_state:
+    st.session_state.video_info = {"title": None, "description": None, "thumbnail": None}
+
+# Input and fetch video info
+video_url = st.text_input("Enter the YouTube video URL:", key="video_url_input")
+if video_url and is_valid_youtube_url(video_url):
+    if st.button("Fetch Video Info"):
+        title, description, thumbnail = get_video_info(video_url)
+        st.session_state.video_info = {"title": title, "description": description, "thumbnail": thumbnail}
+
+# Display video info
+if st.session_state.video_info["thumbnail"]:
+    st.image(st.session_state.video_info["thumbnail"], caption="Video Thumbnail", width=500)
+if st.session_state.video_info["title"]:
+    st.markdown(f"**Title:** {st.session_state.video_info['title']}")
+if st.session_state.video_info["description"]:
+    st.markdown(f"**Description:** {st.session_state.video_info['description']}")
+
 
 # Button for downloading and providing the download link
 if st.button("Download Video"):
