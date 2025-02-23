@@ -37,7 +37,7 @@ def download_video(url, format_choice):
 # Streamlit UI
 st.set_page_config(page_title="YouTube Video & Audio Downloader", layout="centered")
 st.image("https://upload.wikimedia.org/wikipedia/commons/4/42/YouTube_icon_%282013-2017%29.png", width=100)
-st.title("YouTube Video Downloader")
+st.title("YouTube Video & Audio Downloader")
 
 st.markdown("""
 This application allows you to download videos from YouTube in various formats. 
