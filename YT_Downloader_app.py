@@ -100,8 +100,6 @@
 import yt_dlp
 import streamlit as st
 from io import BytesIO
-import subprocess
-import os
 
 # --- Download function ---
 def download_video(url, format_choice):
@@ -109,6 +107,7 @@ def download_video(url, format_choice):
     if "shorts" in url:
         url = url.replace("shorts/", "watch?v=")
 
+    # Temporary file buffer
     buffer = BytesIO()
 
     if format_choice.lower() == "mp4":
@@ -116,36 +115,42 @@ def download_video(url, format_choice):
             "format": "best[ext=mp4][vcodec^=avc1]/best[ext=mp4]/best",
             "merge_output_format": "mp4",
             "noplaylist": True,
-            "outtmpl": "-",  # output to stdout (memory)
+            "outtmpl": "-",  # write to stdout (in-memory)
             "quiet": True,
-            "http_headers": {"User-Agent": "Mozilla/5.0"},
         }
+        mime_type = "video/mp4"
+
     elif format_choice.lower() == "mp3":
         ydl_opts = {
             "format": "bestaudio/best",
+            "noplaylist": True,
             "outtmpl": "-", 
             "quiet": True,
-            "noplaylist": True,
             "postprocessors": [
-                {  # Extract audio using ffmpeg
+                {  # Extract audio
                     "key": "FFmpegExtractAudio",
                     "preferredcodec": "mp3",
                     "preferredquality": "192",
                 }
             ],
-            "http_headers": {"User-Agent": "Mozilla/5.0"},
         }
+        mime_type = "audio/mpeg"
     else:
-        return None, "Invalid format"
+        return None, None, "Invalid format"
 
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            info = ydl.extract_info(url, download=False)
-            # Get direct media URL instead of downloading
-            download_url = info["url"]
-            return download_url, None
+            info = ydl.extract_info(url, download=True)
+            filename = ydl.prepare_filename(info)
+
+        # Load downloaded file into buffer
+        with open(filename, "rb") as f:
+            buffer.write(f.read())
+        buffer.seek(0)
+
+        return buffer, filename, mime_type
     except Exception as e:
-        return None, str(e)
+        return None, None, str(e)
 
 
 # --- Streamlit UI ---
@@ -163,15 +168,22 @@ format_choice = st.selectbox("Select the format:", ["mp4", "mp3"])
 
 if st.button("Download"):
     if video_url:
-        with st.spinner("Fetching download link..."):
-            download_url, error = download_video(video_url, format_choice)
-            if error:
-                st.error(f"An error occurred: {error}")
+        with st.spinner("Downloading... Please wait"):
+            buffer, filename, result = download_video(video_url, format_choice)
+            if buffer is None:
+                st.error(f"An error occurred: {result}")
             else:
                 st.success("Download ready!")
+                # Preview if video
                 if format_choice == "mp4":
-                    st.video(download_url)  # preview
-                st.markdown(f"[Click here to download {format_choice.upper()}]({download_url})")
+                    st.video(buffer)
+
+                # Actual download button
+                st.download_button(
+                    label=f"Click here to download {format_choice.upper()}",
+                    data=buffer,
+                    file_name=filename.split("/")[-1],
+                    mime=result if isinstance(result, str) else result,
+                )
     else:
         st.error("Please enter a valid YouTube URL.")
-
