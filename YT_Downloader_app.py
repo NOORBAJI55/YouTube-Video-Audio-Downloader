@@ -151,18 +151,7 @@ if st.button("Download"):
                 st.success("Download ready!")
                 if format_choice == "mp4":
                     st.video(download_url)  # preview
-                # st.markdown(f"[Click here to download {format_choice.upper()}]({download_url})")
-                     # Provide the download button
-                    with open(file_path, "rb") as file:
-                        mime_type = "audio/mpeg" if format_choice == 'mp3' else "video/mp4"
-                        st.download_button(
-                            label="Click to Download Video",
-                            data=file,
-                            file_name=os.path.basename(file_path),
-                            mime=mime_type
-                        )
-                else:
-                    st.error(f"File not found at path: {file_path}")
+                st.markdown(f"[Click here to download {format_choice.upper()}]({download_url})")
     
                 
                 
