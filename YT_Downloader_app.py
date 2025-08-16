@@ -77,40 +77,80 @@
 
 
 
-
-import streamlit as st
 import yt_dlp
+import streamlit as st
+from io import BytesIO
+import subprocess
 import os
 
-st.title("📥 YouTube Video & Audio Downloader")
+# --- Download function ---
+def download_video(url, format_choice):
+    # Fix Shorts links
+    if "shorts" in url:
+        url = url.replace("shorts/", "watch?v=")
 
-url = st.text_input("Enter YouTube URL:")
-download_btn = st.button("Click here to download MP4")
+    buffer = BytesIO()
 
-if download_btn and url:
-    try:
+    if format_choice.lower() == "mp4":
         ydl_opts = {
-            "format": "bestvideo+bestaudio/best",
-            "merge_output_format": "mp4",  # force MP4 merge
-            "outtmpl": "downloaded.%(ext)s",  # fixed output filename
+            "format": "best[ext=mp4][vcodec^=avc1]/best[ext=mp4]/best",
+            "merge_output_format": "mp4",
+            "noplaylist": True,
+            "outtmpl": "-",  # output to stdout (memory)
+            "quiet": True,
+            "http_headers": {"User-Agent": "Mozilla/5.0"},
         }
+    elif format_choice.lower() == "mp3":
+        ydl_opts = {
+            "format": "bestaudio/best",
+            "outtmpl": "-", 
+            "quiet": True,
+            "noplaylist": True,
+            "postprocessors": [
+                {  # Extract audio using ffmpeg
+                    "key": "FFmpegExtractAudio",
+                    "preferredcodec": "mp3",
+                    "preferredquality": "192",
+                }
+            ],
+            "http_headers": {"User-Agent": "Mozilla/5.0"},
+        }
+    else:
+        return None, "Invalid format"
 
+    try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            st.write("⬇️ Downloading...")
-            ydl.download([url])
-
-        # After download, serve the file
-        if os.path.exists("downloaded.mp4"):
-            with open("downloaded.mp4", "rb") as f:
-                st.download_button(
-                    label="🎬 Save Video",
-                    data=f,
-                    file_name="video.mp4",
-                    mime="video/mp4"
-                )
-            os.remove("downloaded.mp4")  # cleanup after download
-        else:
-            st.error("Download failed — file not found.")
-
+            info = ydl.extract_info(url, download=False)
+            # Get direct media URL instead of downloading
+            download_url = info["url"]
+            return download_url, None
     except Exception as e:
-        st.error(f"An error occurred: {e}")
+        return None, str(e)
+
+
+# --- Streamlit UI ---
+st.set_page_config(page_title="YouTube Video & Audio Downloader", layout="centered")
+st.image("https://upload.wikimedia.org/wikipedia/commons/4/42/YouTube_icon_%282013-2017%29.png", width=100)
+st.title("YouTube Video & Audio Downloader")
+
+st.markdown("""
+This application allows you to download videos from YouTube in various formats.  
+Simply enter the URL, select the desired format, and click download.
+""")
+
+video_url = st.text_input("Enter the YouTube video URL:")
+format_choice = st.selectbox("Select the format:", ["mp4", "mp3"])
+
+if st.button("Download"):
+    if video_url:
+        with st.spinner("Fetching download link..."):
+            download_url, error = download_video(video_url, format_choice)
+            if error:
+                st.error(f"An error occurred: {error}")
+            else:
+                st.success("Download ready!")
+                if format_choice == "mp4":
+                    st.video(download_url)  # preview
+                st.markdown(f"[Click here to download {format_choice.upper()}]({download_url})")
+    else:
+        st.error("Please enter a valid YouTube URL.")
