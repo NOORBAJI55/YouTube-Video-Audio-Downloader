@@ -283,7 +283,10 @@ def download_video(url, format_choice):
     # Fix Shorts links
     if "shorts" in url:
         url = url.replace("shorts/", "watch?v=")
-    
+
+    # Remove query parameters if present
+    url = url.split('?')[0]  # Keep only the base URL
+
     st.write(f"Using URL: {url}")  # Debugging line
 
     if format_choice.lower() == "mp4":
@@ -321,6 +324,7 @@ def download_video(url, format_choice):
             return download_url, title, None
     except Exception as e:
         return None, None, str(e)
+
 
 
 
