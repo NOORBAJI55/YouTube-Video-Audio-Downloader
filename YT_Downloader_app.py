@@ -283,6 +283,8 @@ def download_video(url, format_choice):
     # Fix Shorts links
     if "shorts" in url:
         url = url.replace("shorts/", "watch?v=")
+    
+    st.write(f"Using URL: {url}")  # Debugging line
 
     if format_choice.lower() == "mp4":
         ydl_opts = {
@@ -309,17 +311,17 @@ def download_video(url, format_choice):
             "http_headers": {"User -Agent": "Mozilla/5.0"},
         }
     else:
-        return None, "Invalid format"
+        return None, None, "Invalid format"
 
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(url, download=False)
-            # Get direct media URL instead of downloading
             download_url = info["url"]
-            title = info["title"]  # Get the video title
+            title = info["title"]
             return download_url, title, None
     except Exception as e:
         return None, None, str(e)
+
 
 
 # --- Streamlit UI ---
