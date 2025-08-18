@@ -270,33 +270,39 @@
 
 
 
-
 import yt_dlp
 import streamlit as st
 import os
 
 # --- Download function ---
 def download_video(url, format_choice):
-    # Fix Shorts links
     if "shorts" in url:
         url = url.replace("shorts/", "watch?v=")
 
+    common_opts = {
+        "quiet": True,
+        "noplaylist": True,
+        "http_headers": {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                          "AppleWebKit/537.36 (KHTML, like Gecko) "
+                          "Chrome/120.0.0.0 Safari/537.36",
+            "Accept": "*/*",
+            "Accept-Language": "en-US,en;q=0.9",
+            "Sec-Fetch-Mode": "no-cors",
+        },
+        "outtmpl": "%(title)s.%(ext)s",  # filename = video title
+    }
+
     if format_choice.lower() == "mp4":
         ydl_opts = {
-            "format": "best[ext=mp4][vcodec^=avc1]/best[ext=mp4]/best",
+            **common_opts,
+            "format": "bestvideo[ext=mp4]+bestaudio[ext=m4a]/mp4",
             "merge_output_format": "mp4",
-            "noplaylist": True,
-            "quiet": True,
-            "http_headers": {"User-Agent": "Mozilla/5.0"},
-            "outtmpl": "%(title)s.%(ext)s",  # Save file as video title
         }
     elif format_choice.lower() == "mp3":
         ydl_opts = {
+            **common_opts,
             "format": "bestaudio/best",
-            "quiet": True,
-            "noplaylist": True,
-            "http_headers": {"User-Agent": "Mozilla/5.0"},
-            "outtmpl": "%(title)s.%(ext)s",  # Save file as video title
             "postprocessors": [
                 {
                     "key": "FFmpegExtractAudio",
@@ -338,7 +344,7 @@ if st.button("Download"):
                         label=f"Click here to download {format_choice.upper()}",
                         data=f,
                         file_name=os.path.basename(filename),
-                        mime="video/mp4" if format_choice=="mp4" else "audio/mpeg"
+                        mime="video/mp4" if format_choice == "mp4" else "audio/mpeg"
                     )
     else:
         st.error("Please enter a valid YouTube URL.")
