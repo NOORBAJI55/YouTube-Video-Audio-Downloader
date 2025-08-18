@@ -164,7 +164,7 @@ if st.button("Download"):
                 if format_choice == "mp4":
                     st.video(download_url)  # preview
                     st.markdown(f"[Click here to download {format_choice.upper()}]({download_url})")
-                else format_choice == "mp3":
+                else:
                     st.audio(download_url)  # preview
                     st.markdown(f"[Click here to download {format_choice.upper()}]({download_url})")
           
