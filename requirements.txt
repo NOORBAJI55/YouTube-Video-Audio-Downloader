@@ -1,4 +1,4 @@
 streamlit
 yt-dlp>=2025.1.15
 ffmpeg-python
-
+yt-dlp --upgrade
