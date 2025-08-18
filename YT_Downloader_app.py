@@ -163,16 +163,10 @@ if st.button("Download"):
 
                 if format_choice == "mp4":
                     st.video(download_url)  # preview
-                    # Show button only for MP4
-                    st.markdown(
-                        f'<a href="{download_url}" download>'
-                        f'<button> Click here to download MP4</button>'
-                        f'</a>',
-                        unsafe_allow_html=True
-                    )
+                  
                 else:
                     st.audio(download_url)  # preview
-                    st.markdown(f"[Click here to download MP3]({download_url})")
+                 
                 
     else:
         st.error("Please enter a valid YouTube URL.")
