@@ -166,8 +166,7 @@ if st.button("Download"):
                     # Show button only for MP4
                     st.markdown(
                         f'<a href="{download_url}" download>'
-                        f'<button style="background-color:#FF0000;color:white;padding:10px 20px;'
-                        f'border:none;border-radius:8px;cursor:pointer;">⬇️ Click here to download MP4</button>'
+                        f'<button> Click here to download MP4</button>'
                         f'</a>',
                         unsafe_allow_html=True
                     )
