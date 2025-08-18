@@ -271,63 +271,18 @@
 
 
 import yt_dlp
-import streamlit as st
-import os
 
 def download_video(url, format_choice):
-    if "shorts" in url:
-        url = url.replace("shorts/", "watch?v=")
-
     ydl_opts = {
-        "quiet": True,
-        "noplaylist": True,
-        "outtmpl": "%(title)s.%(ext)s",  # Save with video title
-        "geo_bypass": True,
-        "restrictfilenames": True,
+        'format': format_choice,
+        'outtmpl': '%(title)s.%(ext)s',
+        'cookies': 'cookies.txt',  # Export cookies from your browser
+        'http_headers': {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101 Firefox/102.0',
+            'Accept-Language': 'en-US,en;q=0.5',
+            'Accept-Encoding': 'gzip, deflate',
+        }
     }
 
-    if format_choice.lower() == "mp4":
-        ydl_opts.update({
-            "format": "bv*+ba/b",   # best video+audio
-            "merge_output_format": "mp4",
-        })
-    elif format_choice.lower() == "mp3":
-        ydl_opts.update({
-            "format": "bestaudio/best",
-            "postprocessors": [{
-                "key": "FFmpegExtractAudio",
-                "preferredcodec": "mp3",
-                "preferredquality": "192",
-            }],
-        })
-
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-        info = ydl.extract_info(url, download=True)
-        filename = ydl.prepare_filename(info)
-        return filename
-
-st.title("YouTube Downloader")
-
-video_url = st.text_input("Enter YouTube URL:")
-format_choice = st.selectbox("Select format", ["mp4", "mp3"])
-
-if st.button("Download"):
-    if video_url:
-        try:
-            with st.spinner("Downloading..."):
-                filename = download_video(video_url, format_choice)
-
-            st.success("Download complete!")
-
-            if format_choice == "mp4":
-                st.video(filename)
-
-            with open(filename, "rb") as f:
-                st.download_button(
-                    label=f"Click here to download {format_choice.upper()}",
-                    data=f,
-                    file_name=os.path.basename(filename),
-                    mime="video/mp4" if format_choice == "mp4" else "audio/mpeg"
-                )
-        except Exception as e:
-            st.error(f"Error: {str(e)}")
+        ydl.download([url])
