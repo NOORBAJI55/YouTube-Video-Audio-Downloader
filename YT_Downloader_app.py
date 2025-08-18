@@ -88,6 +88,7 @@
 #         st.error("Please enter a valid YouTube URL.")
 
 
+
 import yt_dlp
 import streamlit as st
 from io import BytesIO
@@ -104,7 +105,7 @@ def download_video(url, format_choice):
 
     if format_choice.lower() == "mp4":
         ydl_opts = {
-            'format': 'bestvideo+bestaudio/best',
+            "format": "best[ext=mp4][vcodec^=avc1]/best[ext=mp4]/best",
             "merge_output_format": "mp4",
             "noplaylist": True,
             "outtmpl": "-",  # output to stdout (memory)
@@ -160,16 +161,16 @@ if st.button("Download"):
                 st.error(f"An error occurred: {error}")
             else:
                 st.success("Download ready!")
-
                 if format_choice == "mp4":
                     st.video(download_url)  # preview
-                  
-                else:
-                    st.audio(download_url)  # preview
-                 
+                st.markdown(f"[Click here to download {format_choice.upper()}]({download_url})")
+    
+                
                 
     else:
         st.error("Please enter a valid YouTube URL.")
+
+
 
 
 
