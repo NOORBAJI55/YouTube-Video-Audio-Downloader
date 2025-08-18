@@ -164,11 +164,6 @@ if st.button("Download"):
                 if format_choice == "mp4":
                     st.video(download_url)  # preview
                     # Show button only for MP4
-                    st.button(f'<a href="{download_url}" download>'
-                        f'<button> Click here to download MP4</button>'
-                        f'</a>',
-                        unsafe_allow_html=True
-                    )
                     st.markdown(
                         f'<a href="{download_url}" download>'
                         f'<button> Click here to download MP4</button>'
