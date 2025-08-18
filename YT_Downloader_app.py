@@ -279,38 +279,27 @@ def download_video(url, format_choice):
     if "shorts" in url:
         url = url.replace("shorts/", "watch?v=")
 
-    common_opts = {
+    # Common options
+    ydl_opts = {
         "quiet": True,
         "noplaylist": True,
-        "http_headers": {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-                          "AppleWebKit/537.36 (KHTML, like Gecko) "
-                          "Chrome/120.0.0.0 Safari/537.36",
-            "Accept": "*/*",
-            "Accept-Language": "en-US,en;q=0.9",
-            "Sec-Fetch-Mode": "no-cors",
-        },
-        "outtmpl": "%(title)s.%(ext)s",  # filename = video title
+        "outtmpl": "%(title)s.%(ext)s",  # Save with video title
     }
 
     if format_choice.lower() == "mp4":
-        ydl_opts = {
-            **common_opts,
-            "format": "bestvideo[ext=mp4]+bestaudio[ext=m4a]/mp4",
+        ydl_opts.update({
+            "format": "bestvideo+bestaudio/best",
             "merge_output_format": "mp4",
-        }
+        })
     elif format_choice.lower() == "mp3":
-        ydl_opts = {
-            **common_opts,
+        ydl_opts.update({
             "format": "bestaudio/best",
-            "postprocessors": [
-                {
-                    "key": "FFmpegExtractAudio",
-                    "preferredcodec": "mp3",
-                    "preferredquality": "192",
-                }
-            ],
-        }
+            "postprocessors": [{
+                "key": "FFmpegExtractAudio",
+                "preferredcodec": "mp3",
+                "preferredquality": "192",
+            }],
+        })
     else:
         return None, "Invalid format"
 
@@ -324,8 +313,7 @@ def download_video(url, format_choice):
 
 
 # --- Streamlit UI ---
-st.set_page_config(page_title="YouTube Video & Audio Downloader", layout="centered")
-st.image("https://upload.wikimedia.org/wikipedia/commons/4/42/YouTube_icon_%282013-2017%29.png", width=100)
+st.set_page_config(page_title="YouTube Downloader", layout="centered")
 st.title("YouTube Video & Audio Downloader")
 
 video_url = st.text_input("Enter the YouTube video URL:")
@@ -339,6 +327,12 @@ if st.button("Download"):
                 st.error(f"An error occurred: {error}")
             else:
                 st.success("Download complete!")
+
+                # Show video preview only if mp4
+                if format_choice == "mp4":
+                    st.video(filename)
+
+                # Stream the file to user
                 with open(filename, "rb") as f:
                     st.download_button(
                         label=f"Click here to download {format_choice.upper()}",
