@@ -269,20 +269,56 @@
 
 
 
-
 import yt_dlp
+import streamlit as st
+import os
+from io import BytesIO
 
+# --- Download function ---
 def download_video(url, format_choice):
-    ydl_opts = {
-        'format': format_choice,
-        'outtmpl': '%(title)s.%(ext)s',
-        'cookies': 'cookies.txt',  # Export cookies from your browser
-        'http_headers': {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101 Firefox/102.0',
-            'Accept-Language': 'en-US,en;q=0.5',
-            'Accept-Encoding': 'gzip, deflate',
-        }
-    }
+    try:
+        # Fix Shorts links
+        if "shorts" in url:
+            url = url.replace("shorts/", "watch?v=")
 
-    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-        ydl.download([url])
+        ydl_opts = {
+            "format": "best" if format_choice == "mp4" else "bestaudio/best",
+            "outtmpl": "%(title)s.%(ext)s",  # file name = video title
+            "quiet": True,
+        }
+
+        buffer = BytesIO()
+
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            info = ydl.extract_info(url, download=False)
+            file_name = ydl.prepare_filename(info)
+            ydl.download([url])
+
+        return file_name, info["title"]
+
+    except Exception as e:
+        return None, str(e)
+
+
+# --- Streamlit UI ---
+st.title("📥 YouTube Video Downloader")
+
+url = st.text_input("Enter YouTube URL (Video/Shorts):")
+format_choice = st.radio("Select Format:", ["mp4", "mp3"])
+
+if st.button("Download"):
+    if url.strip():
+        file_path, msg = download_video(url, format_choice)
+
+        if file_path:
+            st.success(f"✅ Downloaded: {msg}")
+            with open(file_path, "rb") as f:
+                st.download_button(
+                    label="⬇️ Download File",
+                    data=f,
+                    file_name=os.path.basename(file_path),
+                    mime="video/mp4" if format_choice == "mp4" else "audio/mp3",
+                )
+        else:
+            st.error(f"❌ Error: {msg}")
+
