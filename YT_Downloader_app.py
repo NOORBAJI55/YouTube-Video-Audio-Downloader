@@ -368,6 +368,10 @@ import os
 
 # --- Download function ---
 def download_video(url, format_choice):
+    download_folder = 'downloads/'
+    if not os.path.exists(download_folder):
+        os.makedirs(download_folder)  # Create the folder if it doesn't exist
+
     # Fix Shorts links
     if "shorts" in url:
         url = url.replace("shorts/", "watch?v=")
