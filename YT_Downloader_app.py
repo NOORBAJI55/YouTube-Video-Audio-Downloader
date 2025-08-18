@@ -274,21 +274,21 @@ import yt_dlp
 import streamlit as st
 import os
 
-# --- Download function ---
 def download_video(url, format_choice):
     if "shorts" in url:
         url = url.replace("shorts/", "watch?v=")
 
-    # Common options
     ydl_opts = {
         "quiet": True,
         "noplaylist": True,
         "outtmpl": "%(title)s.%(ext)s",  # Save with video title
+        "geo_bypass": True,
+        "restrictfilenames": True,
     }
 
     if format_choice.lower() == "mp4":
         ydl_opts.update({
-            "format": "bestvideo+bestaudio/best",
+            "format": "bv*+ba/b",   # best video+audio
             "merge_output_format": "mp4",
         })
     elif format_choice.lower() == "mp3":
@@ -300,45 +300,34 @@ def download_video(url, format_choice):
                 "preferredquality": "192",
             }],
         })
-    else:
-        return None, "Invalid format"
 
-    try:
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            info = ydl.extract_info(url, download=True)
-            filename = ydl.prepare_filename(info)
-            return filename, None
-    except Exception as e:
-        return None, str(e)
+    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+        info = ydl.extract_info(url, download=True)
+        filename = ydl.prepare_filename(info)
+        return filename
 
+st.title("YouTube Downloader")
 
-# --- Streamlit UI ---
-st.set_page_config(page_title="YouTube Downloader", layout="centered")
-st.title("YouTube Video & Audio Downloader")
-
-video_url = st.text_input("Enter the YouTube video URL:")
-format_choice = st.selectbox("Select the format:", ["mp4", "mp3"])
+video_url = st.text_input("Enter YouTube URL:")
+format_choice = st.selectbox("Select format", ["mp4", "mp3"])
 
 if st.button("Download"):
     if video_url:
-        with st.spinner("Downloading..."):
-            filename, error = download_video(video_url, format_choice)
-            if error:
-                st.error(f"An error occurred: {error}")
-            else:
-                st.success("Download complete!")
+        try:
+            with st.spinner("Downloading..."):
+                filename = download_video(video_url, format_choice)
 
-                # Show video preview only if mp4
-                if format_choice == "mp4":
-                    st.video(filename)
+            st.success("Download complete!")
 
-                # Stream the file to user
-                with open(filename, "rb") as f:
-                    st.download_button(
-                        label=f"Click here to download {format_choice.upper()}",
-                        data=f,
-                        file_name=os.path.basename(filename),
-                        mime="video/mp4" if format_choice == "mp4" else "audio/mpeg"
-                    )
-    else:
-        st.error("Please enter a valid YouTube URL.")
+            if format_choice == "mp4":
+                st.video(filename)
+
+            with open(filename, "rb") as f:
+                st.download_button(
+                    label=f"Click here to download {format_choice.upper()}",
+                    data=f,
+                    file_name=os.path.basename(filename),
+                    mime="video/mp4" if format_choice == "mp4" else "audio/mpeg"
+                )
+        except Exception as e:
+            st.error(f"Error: {str(e)}")
