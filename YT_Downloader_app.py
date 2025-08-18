@@ -171,6 +171,7 @@ if st.button("Download"):
                         unsafe_allow_html=True
                     )
                 else:
+                    st.audio(download_url)  # preview
                     st.markdown(f"[Click here to download MP3]({download_url})")
     else:
         st.error("Please enter a valid YouTube URL.")
