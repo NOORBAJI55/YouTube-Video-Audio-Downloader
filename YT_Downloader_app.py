@@ -366,87 +366,86 @@
 
 
 import streamlit as st
-from io import BytesIO
 import yt_dlp
-import tempfile # Used for creating temporary files
-import os # Used for file path operations
+import tempfile
+import os
 
 # --- Download function ---
 def download_media(url, format_choice):
     """
-    Downloads media from a URL to a temporary file, reads its binary content,
-    and then deletes the file.
-    Args:
-        url (str): The YouTube URL.
-        format_choice (str): 'mp4' or 'mp3'.
-    Returns:
-        A tuple of (bytes, file_name, error_message).
-        On success, bytes and file_name will be populated.
-        On error, error_message will be populated.
+    Downloads media from a URL. This version is more robust against silent failures.
     """
     # Fix Shorts links
     if "shorts" in url:
         url = url.replace("shorts/", "watch?v=")
 
+    # Generate a temporary file path *base* without an extension.
+    # yt-dlp will add the correct extension (.mp4 or .mp3) automatically.
+    temp_dir = tempfile.gettempdir()
+    temp_filename_base = os.path.join(temp_dir, f"yt-dlp-temp-{os.urandom(8).hex()}")
+    final_temp_path = f"{temp_filename_base}.{format_choice}"
+
     try:
-        # Create a temporary file to store the download
-        with tempfile.NamedTemporaryFile(delete=False, suffix=f'.{format_choice}') as temp_file:
-            temp_filename = temp_file.name
+        # Get video title for the final filename for the user
+        with yt_dlp.YoutubeDL({'quiet': True, 'noplaylist': True}) as ydl:
+            info_dict = ydl.extract_info(url, download=False)
+            video_title = info_dict.get('title', 'download')
+            # Create a filesystem-safe title
+            safe_title = "".join([c for c in video_title if c.isalpha() or c.isdigit() or c==' ']).rstrip()
+            final_filename = f"{safe_title}.{format_choice}"
 
-        info_dict = yt_dlp.YoutubeDL().extract_info(url, download=False)
-        video_title = info_dict.get('title', 'download')
-        safe_title = "".join([c for c in video_title if c.isalpha() or c.isdigit() or c==' ']).rstrip()
-        final_filename = f"{safe_title}.{format_choice}"
-
+        # Common options
+        ydl_opts = {
+            'noplaylist': True,
+            'quiet': True,
+            'http_headers': {'User-Agent': 'Mozilla/5.0'},
+            'outtmpl': temp_filename_base, # CRITICAL: Set the base name for output
+        }
 
         if format_choice.lower() == "mp4":
-            ydl_opts = {
+            ydl_opts.update({
                 "format": "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best",
-                "outtmpl": temp_filename, # Save to the temporary file
-                "noplaylist": True,
-                "quiet": True,
                 "merge_output_format": "mp4",
-                "http_headers": {"User-Agent": "Mozilla/5.0"},
-            }
+            })
         elif format_choice.lower() == "mp3":
-            ydl_opts = {
+            ydl_opts.update({
                 "format": "bestaudio/best",
-                "outtmpl": temp_filename, # Save to the temporary file
-                "quiet": True,
-                "noplaylist": True,
-                "postprocessors": [
-                    {
-                        "key": "FFmpegExtractAudio",
-                        "preferredcodec": "mp3",
-                        "preferredquality": "192",
-                    }
-                ],
-                "http_headers": {"User-Agent": "Mozilla/5.0"},
-            }
+                "postprocessors": [{
+                    'key': 'FFmpegExtractAudio',
+                    'preferredcodec': 'mp3',
+                    'preferredquality': '192',
+                }],
+            })
         else:
             return None, None, "Invalid format"
 
-        # --- Download and Process the file ---
+        # --- Download and Process ---
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             ydl.download([url])
 
-        # --- Read the downloaded file into memory ---
-        with open(temp_filename, 'rb') as f:
-            file_data = f.read()
+        # --- !! CRITICAL CHECK !! ---
+        # Verify that the file was created and is not empty before reading
+        if not os.path.exists(final_temp_path) or os.path.getsize(final_temp_path) == 0:
+            raise ValueError("Download failed. The output file is missing or empty. The URL might be protected or invalid.")
 
-        # --- Clean up the temporary file ---
-        os.remove(temp_filename)
+        # --- Read file into memory ---
+        with open(final_temp_path, 'rb') as f:
+            file_data = f.read()
 
         return file_data, final_filename, None
 
     except Exception as e:
-        # If the temp file still exists after an error, try to remove it
-        if 'temp_filename' in locals() and os.path.exists(temp_filename):
-            os.remove(temp_filename)
+        # Pass the specific error message to the UI
         return None, None, str(e)
 
+    finally:
+        # --- Reliable Cleanup ---
+        # This 'finally' block ensures the temp file is deleted even if an error occurs.
+        if os.path.exists(final_temp_path):
+            os.remove(final_temp_path)
 
-# --- Streamlit UI ---
+
+# --- Streamlit UI (No changes needed here) ---
 st.set_page_config(page_title="YouTube Video & Audio Downloader", layout="centered")
 st.image("https://upload.wikimedia.org/wikipedia/commons/4/42/YouTube_icon_%282013-2017%29.png", width=100)
 st.title("YouTube Video & Audio Downloader")
@@ -470,7 +469,7 @@ if st.button("Generate Download Link"):
                 st.success(f"✅ Ready to download: **{file_name}**")
                 st.download_button(
                     label=f"Click here to download .{format_choice}",
-                    data=file_data, # Pass the actual file bytes
+                    data=file_data,
                     file_name=file_name,
                     mime=f"video/{format_choice}" if format_choice == "mp4" else f"audio/mpeg"
                 )
