@@ -88,94 +88,94 @@
 #         st.error("Please enter a valid YouTube URL.")
 
 
-# import yt_dlp
-# import streamlit as st
-# from io import BytesIO
-# import subprocess
-# import os
+import yt_dlp
+import streamlit as st
+from io import BytesIO
+import subprocess
+import os
 
-# # --- Download function ---
-# def download_video(url, format_choice):
-#     # Fix Shorts links
-#     if "shorts" in url:
-#         url = url.replace("shorts/", "watch?v=")
+# --- Download function ---
+def download_video(url, format_choice):
+    # Fix Shorts links
+    if "shorts" in url:
+        url = url.replace("shorts/", "watch?v=")
 
-#     buffer = BytesIO()
+    buffer = BytesIO()
 
-#     if format_choice.lower() == "mp4":
-#         ydl_opts = {
-#             "format": "best[ext=mp4][vcodec^=avc1]/best[ext=mp4]/best",
-#             "merge_output_format": "mp4",
-#             "noplaylist": True,
-#             "outtmpl": "-",  # output to stdout (memory)
-#             "quiet": True,
-#             "http_headers": {"User-Agent": "Mozilla/5.0"},
-#         }
-#     elif format_choice.lower() == "mp3":
-#         ydl_opts = {
-#             "format": "bestaudio/best",
-#             "outtmpl": "-", 
-#             "quiet": True,
-#             "noplaylist": True,
-#             "postprocessors": [
-#                 {  # Extract audio using ffmpeg
-#                     "key": "FFmpegExtractAudio",
-#                     "preferredcodec": "mp3",
-#                     "preferredquality": "192",
-#                 }
-#             ],
-#             "http_headers": {"User-Agent": "Mozilla/5.0"},
-#         }
-#     else:
-#         return None, "Invalid format"
+    if format_choice.lower() == "mp4":
+        ydl_opts = {
+            "format": "best[ext=mp4][vcodec^=avc1]/best[ext=mp4]/best",
+            "merge_output_format": "mp4",
+            "noplaylist": True,
+            "outtmpl": "-",  # output to stdout (memory)
+            "quiet": True,
+            "http_headers": {"User-Agent": "Mozilla/5.0"},
+        }
+    elif format_choice.lower() == "mp3":
+        ydl_opts = {
+            "format": "bestaudio/best",
+            "outtmpl": "-", 
+            "quiet": True,
+            "noplaylist": True,
+            "postprocessors": [
+                {  # Extract audio using ffmpeg
+                    "key": "FFmpegExtractAudio",
+                    "preferredcodec": "mp3",
+                    "preferredquality": "192",
+                }
+            ],
+            "http_headers": {"User-Agent": "Mozilla/5.0"},
+        }
+    else:
+        return None, "Invalid format"
 
-#     try:
-#         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-#             info = ydl.extract_info(url, download=False)
-#             # Get direct media URL instead of downloading
-#             download_url = info["url"]
-#             return download_url, None
-#     except Exception as e:
-#         return None, str(e)
+    try:
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            info = ydl.extract_info(url, download=False)
+            # Get direct media URL instead of downloading
+            download_url = info["url"]
+            return download_url, None
+    except Exception as e:
+        return None, str(e)
 
 
-# # --- Streamlit UI ---
-# st.set_page_config(page_title="YouTube Video & Audio Downloader", layout="centered")
-# st.image("https://upload.wikimedia.org/wikipedia/commons/4/42/YouTube_icon_%282013-2017%29.png", width=100)
-# st.title("YouTube Video & Audio Downloader")
+# --- Streamlit UI ---
+st.set_page_config(page_title="YouTube Video & Audio Downloader", layout="centered")
+st.image("https://upload.wikimedia.org/wikipedia/commons/4/42/YouTube_icon_%282013-2017%29.png", width=100)
+st.title("YouTube Video & Audio Downloader")
 
-# st.markdown("""
-# This application allows you to download videos from YouTube in various formats.  
-# Simply enter the URL, select the desired format, and click download.
-# """)
+st.markdown("""
+This application allows you to download videos from YouTube in various formats.  
+Simply enter the URL, select the desired format, and click download.
+""")
 
-# video_url = st.text_input("Enter the YouTube video URL:")
-# format_choice = st.selectbox("Select the format:", ["mp4", "mp3"])
+video_url = st.text_input("Enter the YouTube video URL:")
+format_choice = st.selectbox("Select the format:", ["mp4", "mp3"])
 
-# if st.button("Download"):
-#     if video_url:
-#         with st.spinner("Fetching download link..."):
-#             download_url, error = download_video(video_url, format_choice)
-#             if error:
-#                 st.error(f"An error occurred: {error}")
-#             else:
-#                 st.success("Download ready!")
+if st.button("Download"):
+    if video_url:
+        with st.spinner("Fetching download link..."):
+            download_url, error = download_video(video_url, format_choice)
+            if error:
+                st.error(f"An error occurred: {error}")
+            else:
+                st.success("Download ready!")
 
-#                 if format_choice == "mp4":
-#                     st.video(download_url)  # preview
-#                     # Show button only for MP4
-#                     st.markdown(
-#                         f'<a href="{download_url}" download>'
-#                         f'<button> Click here to download MP4</button>'
-#                         f'</a>',
-#                         unsafe_allow_html=True
-#                     )
-#                 else:
-#                     st.audio(download_url)  # preview
-#                     st.markdown(f"[Click here to download MP3]({download_url})")
+                if format_choice == "mp4":
+                    st.video(download_url)  # preview
+                    # Show button only for MP4
+                    st.markdown(
+                        f'<a href="{download_url}" download>'
+                        f'<button> Click here to download MP4</button>'
+                        f'</a>',
+                        unsafe_allow_html=True
+                    )
+                else:
+                    st.audio(download_url)  # preview
+                    st.markdown(f"[Click here to download MP3]({download_url})")
                 
-#     else:
-#         st.error("Please enter a valid YouTube URL.")
+    else:
+        st.error("Please enter a valid YouTube URL.")
 
 
 
@@ -364,114 +364,3 @@
 #     else:
 #         st.error("Please enter a valid YouTube URL.")
 
-import streamlit as st
-from io import BytesIO
-import yt_dlp
-import tempfile # Used for creating temporary files
-import os # Used for file path operations
-
-# --- Download function ---
-# --- Download function (REVISED AND MORE ROBUST) ---
-def download_media(url, format_choice):
-    """
-    Downloads media from a URL. This version uses more robust temporary file
-    handling to avoid post-processing errors.
-    """
-    # Fix Shorts links
-    if "shorts" in url:
-        url = url.replace("shorts/", "watch?v=")
-
-    # Generate a temporary file path *base* without an extension.
-    # yt-dlp will add the correct extension (.mp4 or .mp3) automatically.
-    temp_dir = tempfile.gettempdir()
-    temp_filename_base = os.path.join(temp_dir, f"yt-dlp-temp-{os.urandom(8).hex()}")
-    final_temp_path = f"{temp_filename_base}.{format_choice}"
-
-    try:
-        # Get video title for the final filename for the user
-        with yt_dlp.YoutubeDL({'quiet': True, 'noplaylist': True}) as ydl:
-            info_dict = ydl.extract_info(url, download=False)
-            video_title = info_dict.get('title', 'download')
-            # Create a filesystem-safe title
-            safe_title = "".join([c for c in video_title if c.isalpha() or c.isdigit() or c==' ']).rstrip()
-            final_filename = f"{safe_title}.{format_choice}"
-
-        # Common options
-        ydl_opts = {
-            'noplaylist': True,
-            'quiet': True,
-            'http_headers': {'User-Agent': 'Mozilla/5.0'},
-            'outtmpl': temp_filename_base, # CRITICAL: Set the base name for output
-        }
-
-        if format_choice.lower() == "mp4":
-            ydl_opts.update({
-                "format": "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best",
-                "merge_output_format": "mp4",
-            })
-        elif format_choice.lower() == "mp3":
-            ydl_opts.update({
-                "format": "bestaudio/best",
-                "postprocessors": [{
-                    'key': 'FFmpegExtractAudio',
-                    'preferredcodec': 'mp3',
-                    'preferredquality': '192',
-                }],
-            })
-        else:
-            return None, None, "Invalid format"
-
-        # --- Download and Process ---
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            ydl.download([url])
-
-        # --- CRITICAL VERIFICATION STEP ---
-        # Check if the final file exists and is not empty before reading
-        if not os.path.exists(final_temp_path) or os.path.getsize(final_temp_path) == 0:
-            raise ValueError("Post-processing failed: The final MP3 file was not created. The audio format may be incompatible.")
-
-        # --- Read file into memory ---
-        with open(final_temp_path, 'rb') as f:
-            file_data = f.read()
-
-        return file_data, final_filename, None
-
-    except Exception as e:
-        return None, None, str(e)
-
-    finally:
-        # --- Reliable Cleanup ---
-        # This 'finally' block ensures the temp file is deleted even if an error occurs.
-        if os.path.exists(final_temp_path):
-            os.remove(final_temp_path)
-
-# --- Streamlit UI ---
-st.set_page_config(page_title="YouTube Video & Audio Downloader", layout="centered")
-st.image("https://upload.wikimedia.org/wikipedia/commons/4/42/YouTube_icon_%282013-2017%29.png", width=100)
-st.title("YouTube Video & Audio Downloader")
-
-st.markdown("""
-This application allows you to download videos and audio from YouTube.
-Simply enter the URL, select the desired format, and click the button.
-""")
-
-video_url = st.text_input("Enter the YouTube video URL:")
-format_choice = st.selectbox("Select the format:", ["mp4", "mp3"])
-
-if st.button("Generate Download Link"):
-    if video_url:
-        with st.spinner(f"Processing and downloading in {format_choice}..."):
-            file_data, file_name, error = download_media(video_url, format_choice)
-
-            if error:
-                st.error(f"An error occurred: {error}")
-            else:
-                st.success(f"✅ Ready to download: **{file_name}**")
-                st.download_button(
-                    label=f"Click here to download .{format_choice}",
-                    data=file_data, # Pass the actual file bytes
-                    file_name=file_name,
-                    mime=f"video/{format_choice}" if format_choice == "mp4" else f"audio/mpeg"
-                )
-    else:
-        st.warning("Please enter a valid YouTube URL.")
