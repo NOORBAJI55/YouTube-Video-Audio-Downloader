@@ -433,8 +433,8 @@ if st.button("Download"):
     if video_url:
         with st.spinner("Fetching download link..."):
             result = download_video(video_url, format_choice)
-            if error:
-                st.error(f"An error occurred: {error}")
+            if result.startswith("An error occurred"):
+                st.error(result)
             else:
                 st.success("Download ready!")
 
