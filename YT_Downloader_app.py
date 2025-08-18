@@ -365,50 +365,85 @@
 #         st.error("Please enter a valid YouTube URL.")
 
 
-import yt_dlp
 import streamlit as st
-import os
-import tempfile
+from io import BytesIO
+import yt_dlp
+import tempfile # Used for creating temporary files
+import os # Used for file path operations
 
 # --- Download function ---
-def download_video(url, format_choice):
+def download_media(url, format_choice):
+    """
+    Downloads media from a URL to a temporary file, reads its binary content,
+    and then deletes the file.
+    Args:
+        url (str): The YouTube URL.
+        format_choice (str): 'mp4' or 'mp3'.
+    Returns:
+        A tuple of (bytes, file_name, error_message).
+        On success, bytes and file_name will be populated.
+        On error, error_message will be populated.
+    """
     # Fix Shorts links
     if "shorts" in url:
         url = url.replace("shorts/", "watch?v=")
 
-    if format_choice.lower() == "mp4":
-        ydl_opts = {
-            "format": "best[ext=mp4][vcodec^=avc1]/best[ext=mp4]/best",
-            "noplaylist": True,
-            "outtmpl": "-",  # output to stdout (memory)
-            "quiet": True,
-            "http_headers": {"User -Agent": "Mozilla/5.0"},
-        }
-    elif format_choice.lower() == "mp3":
-        ydl_opts = {
-            "format": "bestaudio/best",
-            "noplaylist": True,
-            "outtmpl": "-", 
-            "quiet": True,
-            "postprocessors": [
-                {  # Extract audio using ffmpeg
-                    "key": "FFmpegExtractAudio",
-                    "preferredcodec": "mp3",
-                    "preferredquality": "192",
-                }
-            ],
-            "http_headers": {"User -Agent": "Mozilla/5.0"},
-        }
-    else:
-        return None, "Invalid format"
-
     try:
+        # Create a temporary file to store the download
+        with tempfile.NamedTemporaryFile(delete=False, suffix=f'.{format_choice}') as temp_file:
+            temp_filename = temp_file.name
+
+        info_dict = yt_dlp.YoutubeDL().extract_info(url, download=False)
+        video_title = info_dict.get('title', 'download')
+        safe_title = "".join([c for c in video_title if c.isalpha() or c.isdigit() or c==' ']).rstrip()
+        final_filename = f"{safe_title}.{format_choice}"
+
+
+        if format_choice.lower() == "mp4":
+            ydl_opts = {
+                "format": "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best",
+                "outtmpl": temp_filename, # Save to the temporary file
+                "noplaylist": True,
+                "quiet": True,
+                "merge_output_format": "mp4",
+                "http_headers": {"User-Agent": "Mozilla/5.0"},
+            }
+        elif format_choice.lower() == "mp3":
+            ydl_opts = {
+                "format": "bestaudio/best",
+                "outtmpl": temp_filename, # Save to the temporary file
+                "quiet": True,
+                "noplaylist": True,
+                "postprocessors": [
+                    {
+                        "key": "FFmpegExtractAudio",
+                        "preferredcodec": "mp3",
+                        "preferredquality": "192",
+                    }
+                ],
+                "http_headers": {"User-Agent": "Mozilla/5.0"},
+            }
+        else:
+            return None, None, "Invalid format"
+
+        # --- Download and Process the file ---
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            info = ydl.extract_info(url, download=True)  # Set download=True to download the file
-            file_path = ydl.prepare_filename(info)  # Get the file path
-            return file_path, None
+            ydl.download([url])
+
+        # --- Read the downloaded file into memory ---
+        with open(temp_filename, 'rb') as f:
+            file_data = f.read()
+
+        # --- Clean up the temporary file ---
+        os.remove(temp_filename)
+
+        return file_data, final_filename, None
+
     except Exception as e:
-        return None, str(e)
+        # If the temp file still exists after an error, try to remove it
+        if 'temp_filename' in locals() and os.path.exists(temp_filename):
+            os.remove(temp_filename)
+        return None, None, str(e)
 
 
 # --- Streamlit UI ---
@@ -417,30 +452,27 @@ st.image("https://upload.wikimedia.org/wikipedia/commons/4/42/YouTube_icon_%2820
 st.title("YouTube Video & Audio Downloader")
 
 st.markdown("""
-This application allows you to download videos from YouTube in various formats.  
-Simply enter the URL, select the desired format, and click download.
+This application allows you to download videos and audio from YouTube.
+Simply enter the URL, select the desired format, and click the button.
 """)
 
 video_url = st.text_input("Enter the YouTube video URL:")
 format_choice = st.selectbox("Select the format:", ["mp4", "mp3"])
 
-# Button for downloading and providing the download link
-if st.button("Download Video"):
+if st.button("Generate Download Link"):
     if video_url:
-        with st.spinner("Fetching download link..."):
-            file_path, error = download_video(video_url, format_choice)
+        with st.spinner(f"Processing and downloading in {format_choice}..."):
+            file_data, file_name, error = download_media(video_url, format_choice)
 
             if error:
                 st.error(f"An error occurred: {error}")
             else:
-                # Provide the file for download
-                btn_text = "Download MP4" if format_choice == "mp4" else "Download MP3"
-                with open(file_path, "rb") as f:
-                    st.download_button(
-                        label=btn_text,
-                        data=f,
-                        file_name=os.path.basename(file_path),
-                        mime="video/mp4" if format_choice == "mp4" else "audio/mpeg"
-                    )
+                st.success(f"✅ Ready to download: **{file_name}**")
+                st.download_button(
+                    label=f"Click here to download .{format_choice}",
+                    data=file_data, # Pass the actual file bytes
+                    file_name=file_name,
+                    mime=f"video/{format_choice}" if format_choice == "mp4" else f"audio/mpeg"
+                )
     else:
-        st.error("Please enter a valid YouTube URL.")
+        st.warning("Please enter a valid YouTube URL.")
