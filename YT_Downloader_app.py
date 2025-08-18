@@ -432,7 +432,7 @@ format_choice = st.selectbox("Select the format:", ["mp4", "mp3"])
 if st.button("Download"):
     if video_url:
         with st.spinner("Fetching download link..."):
-            download_url, error = download_video(video_url, format_choice)
+            result = download_video(video_url, format_choice)
             if error:
                 st.error(f"An error occurred: {error}")
             else:
