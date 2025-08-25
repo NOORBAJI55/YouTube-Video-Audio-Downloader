@@ -1,3 +1,4 @@
 streamlit
 ffmpeg-python
 yt-dlp
+python -m pip install -U yt-dlp
