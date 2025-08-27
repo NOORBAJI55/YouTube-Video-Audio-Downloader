@@ -565,25 +565,27 @@ st.image("https://upload.wikimedia.org/wikipedia/commons/4/42/YouTube_icon_%2820
 st.title("YouTube Video & Audio Downloader")
 
 st.markdown("""
-This application downloads videos from YouTube. It automatically updates itself to fix download errors.
+This application downloads videos from YouTube.  
+It first tries to use Chrome cookies (local PC), and if unavailable, uses cookies.txt (upload for Streamlit Cloud).
 """)
 
-# Automatically update yt-dlp on startup
+# Auto update yt-dlp
 def update_yt_dlp():
-    st.info("Updating yt-dlp to the latest version...")
     try:
         subprocess.run(["pip", "install", "--upgrade", "yt-dlp"], check=True)
-        st.success("yt-dlp updated successfully!")
-    except subprocess.CalledProcessError as e:
-        st.error(f"Failed to update yt-dlp: {e}")
-        st.error("Continuing with the existing version. Errors may occur.")
-
+    except subprocess.CalledProcessError:
+        pass
 update_yt_dlp()
 
-# Define the download function
+# Upload cookies.txt option for Streamlit Cloud
+uploaded_cookie = st.file_uploader("Upload cookies.txt (optional if Chrome cookies not available)", type=["txt"])
+if uploaded_cookie:
+    with open("cookies.txt", "wb") as f:
+        f.write(uploaded_cookie.read())
+
+# Downloader function
 def download_video(url, format_choice):
     download_folder = 'downloads'
-    # Ensure a fresh downloads directory for each session
     if os.path.exists(download_folder):
         shutil.rmtree(download_folder)
     os.makedirs(download_folder, exist_ok=True)
@@ -593,9 +595,17 @@ def download_video(url, format_choice):
         'merge_output_format': 'mp4' if format_choice.lower() == 'mp4' else 'mkv',
         'ffmpeg_location': '/usr/bin/ffmpeg',
         'outtmpl': os.path.join(download_folder, '%(title)s.%(ext)s'),
-        # Use Chrome cookies only
-        'cookiesfrombrowser': ('chrome',),
     }
+
+    # Try Chrome cookies first
+    try:
+        ydl_opts['cookiesfrombrowser'] = ('chrome',)
+    except Exception:
+        pass
+
+    # If cookies.txt exists, fallback
+    if os.path.exists("cookies.txt"):
+        ydl_opts['cookies'] = "cookies.txt"
 
     if format_choice.lower() == 'mp3':
         ydl_opts['postprocessors'] = [{
@@ -604,44 +614,30 @@ def download_video(url, format_choice):
             'preferredquality': '192',
         }]
 
-    try:
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            info_dict = ydl.extract_info(url, download=True)
-            filename = ydl.prepare_filename(info_dict)
-            return filename
-    except yt_dlp.utils.DownloadError as e:
-        return f"An error occurred: {e}"
-    except Exception as e:
-        return f"An error occurred: {e}"
+    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+        info_dict = ydl.extract_info(url, download=True)
+        filename = ydl.prepare_filename(info_dict)
+        return filename
 
-# Input and fetch video URL
+# Streamlit UI
 video_url = st.text_input("Enter the YouTube video URL:")
 format_choice = st.selectbox("Select the format:", ["mp4", "mp3"])
 
-# Button for downloading
 if st.button("Download Video"):
     if video_url:
-        with st.spinner("Processing..."):
-            result = download_video(video_url, format_choice)
-            if result.startswith("An error occurred"):
-                st.error(result)
-            else:
-                st.success("Download completed successfully!")
-
-                # Provide a download button for the user
-                file_path = result
-                file_name = os.path.basename(file_path)
-
-                if os.path.exists(file_path):
-                    with open(file_path, "rb") as file:
-                        mime_type = "audio/mpeg" if format_choice == 'mp3' else "video/mp4"
-                        st.download_button(
-                            label="Click to Download",
-                            data=file,
-                            file_name=file_name,
-                            mime=mime_type
-                        )
-                else:
-                    st.error(f"File not found at path: {file_path}")
+        try:
+            with st.spinner("Downloading..."):
+                result = download_video(video_url, format_choice)
+                file_name = os.path.basename(result)
+                with open(result, "rb") as file:
+                    mime_type = "audio/mpeg" if format_choice == 'mp3' else "video/mp4"
+                    st.download_button(
+                        label="Click to Download",
+                        data=file,
+                        file_name=file_name,
+                        mime=mime_type
+                    )
+        except Exception as e:
+            st.error(f"An error occurred: {e}")
     else:
         st.error("Please enter a valid YouTube URL.")
