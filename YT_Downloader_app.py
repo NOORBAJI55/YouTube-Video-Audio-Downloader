@@ -588,24 +588,25 @@ def download_video(url, format_choice):
         shutil.rmtree(download_folder)
     os.makedirs(download_folder, exist_ok=True)
 
-    # Use cookies from the user's browser for authentication
-    # This helps bypass 403 Forbidden errors, especially for age-restricted or members-only content
-    # For Streamlit Cloud deployments, this is only possible if cookies are provided in some way.
-    # The 'chrome' option only works if chrome is installed on the server.
-    # For local testing, it should work fine.
+    # Check if cookies.txt exists
+    cookies_file = "cookies.txt" if os.path.exists("cookies.txt") else None
+
     ydl_opts = {
         'format': 'bestvideo+bestaudio/best' if format_choice.lower() == 'mp4' else 'bestaudio/best',
         'merge_output_format': 'mp4' if format_choice.lower() == 'mp4' else 'mkv',
         'ffmpeg_location': '/usr/bin/ffmpeg',
         'outtmpl': os.path.join(download_folder, '%(title)s.%(ext)s'),
-        # Bypass 403 errors by using cookies from the browser
-        'cookiesfrombrowser': ('firefox', 'chrome'), 
-        'postprocessors': [{
+    }
+
+    if cookies_file:
+        ydl_opts['cookies'] = cookies_file  # Use uploaded cookies.txt
+
+    if format_choice.lower() == 'mp3':
+        ydl_opts['postprocessors'] = [{
             'key': 'FFmpegExtractAudio',
             'preferredcodec': 'mp3',
             'preferredquality': '192',
-        }] if format_choice.lower() == 'mp3' else []
-    }
+        }]
 
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
@@ -613,8 +614,6 @@ def download_video(url, format_choice):
             filename = ydl.prepare_filename(info_dict)
             return filename
     except yt_dlp.utils.DownloadError as e:
-        if "HTTP Error 403: Forbidden" in str(e):
-            return "An error occurred: ERROR: unable to download video data: HTTP Error 403: Forbidden. Please ensure you are logged into YouTube in your browser."
         return f"An error occurred: {e}"
     except Exception as e:
         return f"An error occurred: {e}"
