@@ -452,192 +452,103 @@
 
 
 
-# import os
-# import yt_dlp
-# import streamlit as st
-# import subprocess
-
-
-# # Define the download function
-# def download_video(url, format_choice):
-#     download_folder = 'downloads/'
-#     if not os.path.exists(download_folder):
-#         os.makedirs(download_folder)  # Create the folder if it doesn't exist
-
-#     if format_choice.lower() == 'mp4':
-#         ydl_opts = {
-#             'format': 'bestvideo+bestaudio/best',  # Download both video and audio
-#             'merge_output_format': 'mp4',  # Merge into mp4 format
-#             'ffmpeg_location': '/usr/bin/ffmpeg',  # Path to FFmpeg
-#             'outtmpl': os.path.join(download_folder, '%(title)s.%(ext)s'),  # Save to 'downloads' folder
-#         }
-#     elif format_choice.lower() == 'mp3':
-#         ydl_opts = {
-#             'format': 'bestaudio/best',
-#             'outtmpl': os.path.join(download_folder, '%(title)s.%(ext)s'),  # Save to 'downloads' folder
-#         }
-#     else:
-#         return "Invalid format choice. Please choose 'mp4' or 'mp3'."
-
-#     try:
-#         # Download video or audio
-#         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-#             info_dict = ydl.extract_info(url, download=True)
-#             filename = ydl.prepare_filename(info_dict)
-#             #st.write(f"File downloaded to: {filename}")
-#             return filename  # Return the saved filename
-#     except Exception as e:
-#         return f"An error occurred: {e}"
-
-# # Streamlit UI
-# st.set_page_config(page_title="YouTube Video & Audio Downloader", layout="centered")
-# st.image("https://upload.wikimedia.org/wikipedia/commons/4/42/YouTube_icon_%282013-2017%29.png", width=100)
-# st.title("YouTube Video & Audio Downloader")
-
-# st.markdown("""
-# This application allows you to download videos from YouTube in various formats. 
-# Simply enter the URL of the video you want to download, select the desired format, 
-# and click the download button. Enjoy your favorite content offline!
-# """)
-
-# # Input and fetch video URL
-# video_url = st.text_input("Enter the YouTube video URL:")
-
-# format_choice = st.selectbox("Select the format:", ["mp4", "mp3"])
-
-
-# # Button for downloading and providing the download link
-# if st.button("Download Video"):
-#     if video_url:
-#         with st.spinner("Converting..."):
-#             result = download_video(video_url, format_choice)
-#             if result.startswith("An error occurred"):
-#                 st.error(result)
-#             else:
-#                 # Debug: Print the download location
-#                 st.write(f"Download completed successfully: {result}")
-
-#                 # Provide a download button for the user to download the file
-#                 file_path = os.path.join('downloads', os.path.basename(result))
-
-#                 # Check if the file exists and handle .webm to mp3 conversion if needed
-#                 if os.path.exists(file_path):
-#                     # If the file is in webm format and the user selected mp3
-#                     if file_path.endswith(".webm") and format_choice == "mp3":
-#                         # Create the mp3 file path
-#                         mp3_file_path = file_path.replace(".webm", ".mp3")
-#                         # Convert .webm to .mp3
-#                         try:
-#                             subprocess.run(["/usr/bin/ffmpeg", "-i", file_path, mp3_file_path], check=True)
-#                             os.remove(file_path)  # Remove the original .webm file
-#                             file_path = mp3_file_path  # Update the path to the new .mp3 file
-#                         except subprocess.CalledProcessError as e:
-#                             st.error(f"Error during conversion: {e}")
-
-#                     # Provide the download button
-#                     with open(file_path, "rb") as file:
-#                         mime_type = "audio/mpeg" if format_choice == 'mp3' else "video/mp4"
-#                         st.download_button(
-#                             label="Click to Download Video",
-#                             data=file,
-#                             file_name=os.path.basename(file_path),
-#                             mime=mime_type
-#                         )
-#                 else:
-#                     st.error(f"File not found at path: {file_path}")
-#     else:
-#         st.error("Please enter a valid YouTube URL.")
-
-
-
-
-
-
 import os
 import yt_dlp
 import streamlit as st
 import subprocess
-import shutil
 
-# Configure Streamlit UI
+
+# Define the download function
+def download_video(url, format_choice):
+    download_folder = 'downloads/'
+    if not os.path.exists(download_folder):
+        os.makedirs(download_folder)  # Create the folder if it doesn't exist
+
+    if format_choice.lower() == 'mp4':
+        ydl_opts = {
+            'format': 'bestvideo+bestaudio/best',  # Download both video and audio
+            'merge_output_format': 'mp4',  # Merge into mp4 format
+            'ffmpeg_location': '/usr/bin/ffmpeg',  # Path to FFmpeg
+            'outtmpl': os.path.join(download_folder, '%(title)s.%(ext)s'),  # Save to 'downloads' folder
+        }
+    elif format_choice.lower() == 'mp3':
+        ydl_opts = {
+            'format': 'bestaudio/best',
+            'outtmpl': os.path.join(download_folder, '%(title)s.%(ext)s'),  # Save to 'downloads' folder
+        }
+    else:
+        return "Invalid format choice. Please choose 'mp4' or 'mp3'."
+
+    try:
+        # Download video or audio
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            info_dict = ydl.extract_info(url, download=True)
+            filename = ydl.prepare_filename(info_dict)
+            #st.write(f"File downloaded to: {filename}")
+            return filename  # Return the saved filename
+    except Exception as e:
+        return f"An error occurred: {e}"
+
+# Streamlit UI
 st.set_page_config(page_title="YouTube Video & Audio Downloader", layout="centered")
 st.image("https://upload.wikimedia.org/wikipedia/commons/4/42/YouTube_icon_%282013-2017%29.png", width=100)
 st.title("YouTube Video & Audio Downloader")
 
 st.markdown("""
-This application downloads videos from YouTube.  
-It first tries to use Chrome cookies (local PC), and if unavailable, uses cookies.txt (upload for Streamlit Cloud).
+This application allows you to download videos from YouTube in various formats. 
+Simply enter the URL of the video you want to download, select the desired format, 
+and click the download button. Enjoy your favorite content offline!
 """)
 
-# Auto update yt-dlp
-def update_yt_dlp():
-    try:
-        subprocess.run(["pip", "install", "--upgrade", "yt-dlp"], check=True)
-    except subprocess.CalledProcessError:
-        pass
-update_yt_dlp()
-
-# Upload cookies.txt option for Streamlit Cloud
-uploaded_cookie = st.file_uploader("Upload cookies.txt (optional if Chrome cookies not available)", type=["txt"])
-if uploaded_cookie:
-    with open("cookies.txt", "wb") as f:
-        f.write(uploaded_cookie.read())
-
-# Downloader function
-def download_video(url, format_choice):
-    download_folder = 'downloads'
-    if os.path.exists(download_folder):
-        shutil.rmtree(download_folder)
-    os.makedirs(download_folder, exist_ok=True)
-
-    ydl_opts = {
-        'format': 'bestvideo+bestaudio/best' if format_choice.lower() == 'mp4' else 'bestaudio/best',
-        'merge_output_format': 'mp4' if format_choice.lower() == 'mp4' else 'mkv',
-        'ffmpeg_location': '/usr/bin/ffmpeg',
-        'outtmpl': os.path.join(download_folder, '%(title)s.%(ext)s'),
-    }
-
-    # Try Chrome cookies first
-    try:
-        ydl_opts['cookiesfrombrowser'] = ('chrome',)
-    except Exception:
-        pass
-
-    # If cookies.txt exists, fallback
-    if os.path.exists("cookies.txt"):
-        ydl_opts['cookies'] = "cookies.txt"
-
-    if format_choice.lower() == 'mp3':
-        ydl_opts['postprocessors'] = [{
-            'key': 'FFmpegExtractAudio',
-            'preferredcodec': 'mp3',
-            'preferredquality': '192',
-        }]
-
-    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-        info_dict = ydl.extract_info(url, download=True)
-        filename = ydl.prepare_filename(info_dict)
-        return filename
-
-# Streamlit UI
+# Input and fetch video URL
 video_url = st.text_input("Enter the YouTube video URL:")
+
 format_choice = st.selectbox("Select the format:", ["mp4", "mp3"])
 
+
+# Button for downloading and providing the download link
 if st.button("Download Video"):
     if video_url:
-        try:
-            with st.spinner("Downloading..."):
-                result = download_video(video_url, format_choice)
-                file_name = os.path.basename(result)
-                with open(result, "rb") as file:
-                    mime_type = "audio/mpeg" if format_choice == 'mp3' else "video/mp4"
-                    st.download_button(
-                        label="Click to Download",
-                        data=file,
-                        file_name=file_name,
-                        mime=mime_type
-                    )
-        except Exception as e:
-            st.error(f"An error occurred: {e}")
+        with st.spinner("Converting..."):
+            result = download_video(video_url, format_choice)
+            if result.startswith("An error occurred"):
+                st.error(result)
+            else:
+                # Debug: Print the download location
+                st.write(f"Download completed successfully: {result}")
+
+                # Provide a download button for the user to download the file
+                file_path = os.path.join('downloads', os.path.basename(result))
+
+                # Check if the file exists and handle .webm to mp3 conversion if needed
+                if os.path.exists(file_path):
+                    # If the file is in webm format and the user selected mp3
+                    if file_path.endswith(".webm") and format_choice == "mp3":
+                        # Create the mp3 file path
+                        mp3_file_path = file_path.replace(".webm", ".mp3")
+                        # Convert .webm to .mp3
+                        try:
+                            subprocess.run(["/usr/bin/ffmpeg", "-i", file_path, mp3_file_path], check=True)
+                            os.remove(file_path)  # Remove the original .webm file
+                            file_path = mp3_file_path  # Update the path to the new .mp3 file
+                        except subprocess.CalledProcessError as e:
+                            st.error(f"Error during conversion: {e}")
+
+                    # Provide the download button
+                    with open(file_path, "rb") as file:
+                        mime_type = "audio/mpeg" if format_choice == 'mp3' else "video/mp4"
+                        st.download_button(
+                            label="Click to Download Video",
+                            data=file,
+                            file_name=os.path.basename(file_path),
+                            mime=mime_type
+                        )
+                else:
+                    st.error(f"File not found at path: {file_path}")
     else:
         st.error("Please enter a valid YouTube URL.")
+
+
+
+
+
