@@ -588,18 +588,14 @@ def download_video(url, format_choice):
         shutil.rmtree(download_folder)
     os.makedirs(download_folder, exist_ok=True)
 
-    # Check if cookies.txt exists
-    cookies_file = "cookies.txt" if os.path.exists("cookies.txt") else None
-
     ydl_opts = {
         'format': 'bestvideo+bestaudio/best' if format_choice.lower() == 'mp4' else 'bestaudio/best',
         'merge_output_format': 'mp4' if format_choice.lower() == 'mp4' else 'mkv',
         'ffmpeg_location': '/usr/bin/ffmpeg',
         'outtmpl': os.path.join(download_folder, '%(title)s.%(ext)s'),
+        # Use Chrome cookies only
+        'cookiesfrombrowser': ('chrome',),
     }
-
-    if cookies_file:
-        ydl_opts['cookies'] = cookies_file  # Use uploaded cookies.txt
 
     if format_choice.lower() == 'mp3':
         ydl_opts['postprocessors'] = [{
