@@ -2,4 +2,3 @@ streamlit
 ffmpeg-python
 yt-dlp
 youtube-dl
-yt-dlp -U
