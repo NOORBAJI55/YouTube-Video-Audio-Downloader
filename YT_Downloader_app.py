@@ -361,94 +361,94 @@
 
 
 
-import yt_dlp
-import streamlit as st
-from io import BytesIO
-import subprocess
-import os
+# import yt_dlp
+# import streamlit as st
+# from io import BytesIO
+# import subprocess
+# import os
 
-# --- Download function ---
-def download_video(url, format_choice):
-    download_folder = 'downloads/'
-    if not os.path.exists(download_folder):
-        os.makedirs(download_folder)  # Create the folder if it doesn't exist
+# # --- Download function ---
+# def download_video(url, format_choice):
+#     download_folder = 'downloads/'
+#     if not os.path.exists(download_folder):
+#         os.makedirs(download_folder)  # Create the folder if it doesn't exist
 
-    # Fix Shorts links
-    if "shorts" in url:
-        url = url.replace("shorts/", "watch?v=")
+#     # Fix Shorts links
+#     if "shorts" in url:
+#         url = url.replace("shorts/", "watch?v=")
 
-    buffer = BytesIO()
+#     buffer = BytesIO()
 
-    if format_choice.lower() == "mp4":
-        ydl_opts = {
-            'format': 'bestvideo+bestaudio/best',
-            "merge_output_format": "mp4",
-            "noplaylist": True,
-            'ffmpeg_location': '/usr/bin/ffmpeg',  # Path to FFmpeg
-            'outtmpl': os.path.join(download_folder, '%(title)s.%(ext)s'),  # output to stdout (memory)
-            "quiet": True,
-            "http_headers": {"User-Agent": "Mozilla/5.0"},
-        }
-    elif format_choice.lower() == "mp3":
-        ydl_opts = {
-            "format": "bestaudio/best",
-            'outtmpl': os.path.join(download_folder, '%(title)s.%(ext)s'),
-            "quiet": True,
-            "noplaylist": True,
-            "postprocessors": [
-                {  # Extract audio using ffmpeg
-                    "key": "FFmpegExtractAudio",
-                    "preferredcodec": "mp3",
-                    "preferredquality": "192",
-                }
-            ],
-            "http_headers": {"User-Agent": "Mozilla/5.0"},
-        }
-    else:
-        return None, "Invalid format"
+#     if format_choice.lower() == "mp4":
+#         ydl_opts = {
+#             'format': 'bestvideo+bestaudio/best',
+#             "merge_output_format": "mp4",
+#             "noplaylist": True,
+#             'ffmpeg_location': '/usr/bin/ffmpeg',  # Path to FFmpeg
+#             'outtmpl': os.path.join(download_folder, '%(title)s.%(ext)s'),  # output to stdout (memory)
+#             "quiet": True,
+#             "http_headers": {"User-Agent": "Mozilla/5.0"},
+#         }
+#     elif format_choice.lower() == "mp3":
+#         ydl_opts = {
+#             "format": "bestaudio/best",
+#             'outtmpl': os.path.join(download_folder, '%(title)s.%(ext)s'),
+#             "quiet": True,
+#             "noplaylist": True,
+#             "postprocessors": [
+#                 {  # Extract audio using ffmpeg
+#                     "key": "FFmpegExtractAudio",
+#                     "preferredcodec": "mp3",
+#                     "preferredquality": "192",
+#                 }
+#             ],
+#             "http_headers": {"User-Agent": "Mozilla/5.0"},
+#         }
+#     else:
+#         return None, "Invalid format"
 
-    try:
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            info = ydl.extract_info(url, download=False)
-            info_dict = ydl.extract_info(url, download=True)
-            filename = ydl.prepare_filename(info_dict)
-            #st.write(f"File downloaded to: {filename}")
-            return filename  # Return the saved filename
-    except Exception as e:
-        return f"An error occurred: {e}"
+#     try:
+#         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+#             info = ydl.extract_info(url, download=False)
+#             info_dict = ydl.extract_info(url, download=True)
+#             filename = ydl.prepare_filename(info_dict)
+#             #st.write(f"File downloaded to: {filename}")
+#             return filename  # Return the saved filename
+#     except Exception as e:
+#         return f"An error occurred: {e}"
 
 
-# --- Streamlit UI ---
-st.set_page_config(page_title="YouTube Video & Audio Downloader", layout="centered")
-st.image("https://upload.wikimedia.org/wikipedia/commons/4/42/YouTube_icon_%282013-2017%29.png", width=100)
-st.title("YouTube Video & Audio Downloader")
+# # --- Streamlit UI ---
+# st.set_page_config(page_title="YouTube Video & Audio Downloader", layout="centered")
+# st.image("https://upload.wikimedia.org/wikipedia/commons/4/42/YouTube_icon_%282013-2017%29.png", width=100)
+# st.title("YouTube Video & Audio Downloader")
 
-st.markdown("""
-This application allows you to download videos from YouTube in various formats.  
-Simply enter the URL, select the desired format, and click download.
-""")
+# st.markdown("""
+# This application allows you to download videos from YouTube in various formats.  
+# Simply enter the URL, select the desired format, and click download.
+# """)
 
-video_url = st.text_input("Enter the YouTube video URL:")
-format_choice = st.selectbox("Select the format:", ["mp4", "mp3"])
+# video_url = st.text_input("Enter the YouTube video URL:")
+# format_choice = st.selectbox("Select the format:", ["mp4", "mp3"])
 
-if st.button("Download"):
-    if video_url:
-        with st.spinner("Fetching download link..."):
-            result = download_video(video_url, format_choice)
-            if result.startswith("An error occurred"):
-                st.error(result)
-            else:
-                st.success("Download ready!")
+# if st.button("Download"):
+#     if video_url:
+#         with st.spinner("Fetching download link..."):
+#             result = download_video(video_url, format_choice)
+#             if result.startswith("An error occurred"):
+#                 st.error(result)
+#             else:
+#                 st.success("Download ready!")
 
-                if format_choice == "mp4":
-                    st.video(download_url)  # preview
+#                 if format_choice == "mp4":
+#                     st.video(download_url)  # preview
                   
-                else:
-                    st.audio(download_url)  # preview
+#                 else:
+#                     st.audio(download_url)  # preview
                  
                 
-    else:
-        st.error("Please enter a valid YouTube URL.")
+#     else:
+#         st.error("Please enter a valid YouTube URL.")
 
 
 
@@ -550,3 +550,112 @@ if st.button("Download"):
 #         st.error("Please enter a valid YouTube URL.")
 
 
+
+
+import yt_dlp
+import streamlit as st
+import os
+
+# --- Download function ---
+def download_video(url, format_choice, cookie_file=None):
+    download_folder = 'downloads/'
+    if not os.path.exists(download_folder):
+        os.makedirs(download_folder)
+
+    # Fix Shorts links
+    if "shorts" in url:
+        url = url.replace("shorts/", "watch?v=")
+
+    # Base options
+    ydl_opts = {
+        'outtmpl': os.path.join(download_folder, '%(title)s.%(ext)s'),
+        "quiet": True,
+        "noplaylist": True,
+        "http_headers": {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"},
+    }
+
+    # Add Cookies if provided
+    if cookie_file:
+        ydl_opts['cookiefile'] = cookie_file
+
+    if format_choice.lower() == "mp4":
+        ydl_opts.update({
+            'format': 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best',
+            "merge_output_format": "mp4",
+        })
+    elif format_choice.lower() == "mp3":
+        ydl_opts.update({
+            "format": "bestaudio/best",
+            "postprocessors": [{
+                "key": "FFmpegExtractAudio",
+                "preferredcodec": "mp3",
+                "preferredquality": "192",
+            }],
+        })
+    else:
+        return None, "Invalid format"
+
+    try:
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            info = ydl.extract_info(url, download=True)
+            
+            # Robust way to get the final filename
+            if format_choice == 'mp3':
+                # For MP3, the extension changes during post-processing
+                filename = ydl.prepare_filename(info).rsplit('.', 1)[0] + '.mp3'
+            else:
+                filename = ydl.prepare_filename(info)
+                
+            return filename
+    except Exception as e:
+        return f"An error occurred: {e}"
+
+# --- Streamlit UI ---
+st.set_page_config(page_title="YouTube Downloader", layout="centered")
+st.title("YouTube Video & Audio Downloader")
+
+st.info("Note: YouTube currently blocks many bot requests. If the download fails, upload a 'cookies.txt' file.")
+
+# UI Components
+video_url = st.text_input("Enter the YouTube video URL:")
+format_choice = st.selectbox("Select the format:", ["mp4", "mp3"])
+
+# Optional: Allow user to upload cookies.txt via UI
+uploaded_cookie = st.file_uploader("Upload cookies.txt (Optional but recommended)", type=["txt"])
+
+if st.button("Download"):
+    if video_url:
+        cookie_path = None
+        
+        # Handle uploaded cookie file
+        if uploaded_cookie is not None:
+            cookie_path = "temp_cookies.txt"
+            with open(cookie_path, "wb") as f:
+                f.write(uploaded_cookie.getbuffer())
+
+        with st.spinner("Downloading... This might take a minute..."):
+            # Call function
+            result = download_video(video_url, format_choice, cookie_file=cookie_path)
+
+            # Check for errors
+            if result and result.startswith("An error occurred"):
+                st.error(result)
+            elif result and os.path.exists(result):
+                st.success(f"Download ready: {os.path.basename(result)}")
+                
+                # Open file for streamlit download button
+                with open(result, "rb") as file:
+                    st.download_button(
+                        label="Click to Save File",
+                        data=file,
+                        file_name=os.path.basename(result),
+                        mime="video/mp4" if format_choice == "mp4" else "audio/mpeg"
+                    )
+                
+                # Clean up cookie file
+                if cookie_path and os.path.exists(cookie_path):
+                    os.remove(cookie_path)
+            else:
+                st.error("File processing failed. Please try again.")
+    else:
+        st.error("Please enter a valid YouTube URL.")
