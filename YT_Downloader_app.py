@@ -711,7 +711,7 @@ def run_downloader():
     
     col1, col2 = st.columns(2)
     with col1:
-        format_choice = st.radio("Choose format", ("MP4 (Video)", "MP3 (Audio)"), key="format_choice")
+        format_choice = st.selectbox("Choose format", ("MP4 (Video)", "MP3 (Audio)"), key="format_choice")
     
     # We will show the download button only after processing
     # Use session state to hold the download button data
