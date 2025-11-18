@@ -180,10 +180,10 @@ import re
 import time
 
 def sanitize_filename(filename):
-    """
-    Removes illegal characters from a string so it can be used as a
-    safe filename.
-    """
+    # """
+    # Removes illegal characters from a string so it can be used as a
+    # safe filename.
+    # """
     # Remove characters that are illegal in most filesystems
     sanitized = re.sub(r'[\\/*?:"<>|]', "", filename)
     # Replace whitespace with underscores
