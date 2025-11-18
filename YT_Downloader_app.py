@@ -211,7 +211,12 @@ def get_video_info(url):
 
 def run_downloader():
     st.set_page_config(page_title="YouTube Downloader")
+    st.image("https://upload.wikimedia.org/wikipedia/commons/4/42/YouTube_icon_%282013-2017%29.png", width=100)
     st.title("YouTube Video & Audio Downloader")
+    st.markdown("""
+    This application allows you to download videos from YouTube in various formats.
+    Simply enter the URL, select the desired format, and click download.
+    """)
     
     # Warning if cookies.txt is missing
     if not os.path.exists(COOKIE_FILE):
