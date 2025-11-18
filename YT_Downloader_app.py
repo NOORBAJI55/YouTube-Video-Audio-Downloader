@@ -701,6 +701,10 @@ def run_downloader():
     st.set_page_config(page_title="YouTube Downloader")
     st.image("https://upload.wikimedia.org/wikipedia/commons/4/42/YouTube_icon_%282013-2017%29.png", width=100)
     st.title("YouTube Video & Audio Downloader")
+    st.markdown("""
+    This application allows you to download videos from YouTube in various formats.
+    Simply enter the URL, select the desired format, and click download.
+    """)
     st.markdown("Paste a YouTube video or short URL below to download it as MP4 or MP3.")
 
     url = st.text_input("YouTube URL", placeholder="https.www.youtube.com/watch?v=...")
