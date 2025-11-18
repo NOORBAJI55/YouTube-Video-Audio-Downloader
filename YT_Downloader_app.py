@@ -45,6 +45,9 @@ def run_downloader():
     This application allows you to download videos from YouTube in various formats.
     Simply enter the URL, select the desired format, and click download.
     """)
+    st.markdown("""
+    NOTE : Lengthy video takes more time plz be patient
+    """)
     
     # Warning if cookies.txt is missing
     if not os.path.exists(COOKIE_FILE):
