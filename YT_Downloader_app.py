@@ -205,6 +205,21 @@ def get_video_info(url):
             st.error(f"An unexpected error occurred: {e}")
             return None
 
+def list_formats(url):
+    """Lists available formats for a given video."""
+    ydl_opts = {
+        'noplaylist': True,
+        'cookiefile': COOKIE_FILE if os.path.exists(COOKIE_FILE) else None
+    }
+    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+        try:
+            info = ydl.extract_info(url, download=False)
+            formats = info.get('formats', [])
+            return formats
+        except Exception as e:
+            st.error(f"Could not list formats: {e}")
+            return []
+
 def run_downloader():
     st.set_page_config(page_title="YouTube Downloader")
     st.image("https://upload.wikimedia.org/wikipedia/commons/4/42/YouTube_icon_%282013-2017%29.png", width=100)
@@ -213,7 +228,7 @@ def run_downloader():
     This application allows you to download videos from YouTube in various formats.
     Simply enter the URL, select the desired format, and click download.
     """)
-    st.markdown("NOTE: Lengthy videos take more time, please be patient.")
+    st.markdown("**NOTE:** Lengthy videos take more time, please be patient.")
 
     if not os.path.exists(COOKIE_FILE):
         st.warning(f"⚠️ '{COOKIE_FILE}' not found. YouTube may block the download. Please export cookies.txt and place it in the app directory.")
@@ -223,11 +238,22 @@ def run_downloader():
     col1, col2 = st.columns(2)
     with col1:
         format_choice = st.selectbox("Select the format:", ["MP4 (Video)", "MP3 (Audio)"], key="format_choice")
-    with col2:
-        list_formats = st.checkbox("Show available formats")
 
     if 'download_data' not in st.session_state:
         st.session_state.download_data = None
+
+    if st.button("List Formats"):
+        if url:
+            with st.spinner("Fetching available formats..."):
+                formats = list_formats(url)
+                if formats:
+                    st.subheader("Available Formats")
+                    for f in formats:
+                        st.write(f"{f.get('format_id')} - {f.get('ext')} - {f.get('resolution', '')} - {f.get('acodec', '')}/{f.get('vcodec', '')}")
+                else:
+                    st.warning("No formats found.")
+        else:
+            st.warning("Please paste a URL first.")
 
     if st.button("Process Video", key="process_button"):
         st.session_state.download_data = None
@@ -240,12 +266,6 @@ def run_downloader():
             if info:
                 title = info.get('title', None)
 
-                if list_formats:
-                    st.subheader("Available Formats")
-                    for f in info.get('formats', []):
-                        st.write(f"{f['format_id']} | {f['ext']} | {f.get('resolution', '')} | {f.get('abr', '')}kbps")
-
-                # Common options
                 common_opts = {
                     'noplaylist': True,
                     'cookiefile': COOKIE_FILE if os.path.exists(COOKIE_FILE) else None,
@@ -258,7 +278,10 @@ def run_downloader():
                     ydl_opts = {
                         **common_opts,
                         'format': 'bestvideo+bestaudio/best',
-                        'merge_output_format': 'mp4',
+                        'postprocessors': [{
+                            'key': 'FFmpegVideoConvertor',
+                            'preferedformat': 'mp4',
+                        }],
                     }
                 else:  # MP3 (Audio)
                     ext = "mp3"
@@ -279,6 +302,7 @@ def run_downloader():
                     final_filename = f"{base_name}.{ext}"
                 else:
                     final_filename = default_name
+                    base_name = "youtube_download"
 
                 try:
                     with tempfile.TemporaryDirectory() as temp_dir:
@@ -289,18 +313,10 @@ def run_downloader():
                             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                                 ydl.download([url])
 
-                            # Try expected file
                             expected_file = f"{out_path}.{ext}"
-                            actual_file = None
-                            if os.path.exists(expected_file):
-                                actual_file = expected_file
-                            else:
-                                files_in_dir = os.listdir(temp_dir)
-                                if files_in_dir:
-                                    actual_file = os.path.join(temp_dir, files_in_dir[0])
 
-                            if actual_file and os.path.exists(actual_file):
-                                with open(actual_file, 'rb') as f:
+                            if os.path.exists(expected_file):
+                                with open(expected_file, 'rb') as f:
                                     file_bytes = f.read()
 
                                 st.session_state.download_data = {
@@ -311,7 +327,21 @@ def run_downloader():
                                 }
                                 st.success("Your file is ready!")
                             else:
-                                st.error("Download failed. Could not find converted file.")
+                                files_in_dir = os.listdir(temp_dir)
+                                if files_in_dir:
+                                    actual_file = os.path.join(temp_dir, files_in_dir[0])
+                                    with open(actual_file, 'rb') as f:
+                                        file_bytes = f.read()
+
+                                    st.session_state.download_data = {
+                                        "bytes": file_bytes,
+                                        "filename": final_filename,
+                                        "mime": mime_type,
+                                        "title": info.get('title', 'Unknown Title')
+                                    }
+                                    st.success("Your file is ready!")
+                                else:
+                                    st.error("Download failed. Could not find converted file.")
 
                 except yt_dlp.utils.DownloadError as e:
                     st.error(f"Download Error: {e}")
